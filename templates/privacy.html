@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenTail - Legal Documents</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #bb6a7f;
+            --text: #333;
+            --bg: #fdfdfd;
+            --sidebar-bg: #f4f7f6;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.8;
+            color: var(--text);
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-radius: 12px;
+        }
+
+        h1 {
+            font-family: 'Nunito', sans-serif;
+            color: var(--primary);
+            font-size: 2.5rem;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-family: 'Nunito', sans-serif;
+            color: #6b2e3e;
+            margin-top: 40px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+        }
+
+        h2::before {
+            content: "•";
+            color: var(--primary);
+            margin-right: 10px;
+            font-size: 2rem;
+        }
+
+        h3 {
+            color: #444;
+            font-size: 1.2rem;
+            margin-top: 25px;
+            border-left: 4px solid var(--primary);
+            padding-left: 15px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            text-align: justify;
+        }
+
+        .highlight-box {
+            background: var(--sidebar-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin: 30px 0;
+        }
+
+        .page-break {
+            margin: 60px 0;
+            border-top: 2px dashed var(--border);
+            position: relative;
+        }
+
+        .page-label {
+            position: absolute;
+            top: -15px;
+            right: 0;
+            background: var(--bg);
+            padding: 0 10px;
+            font-size: 0.8rem;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .footer-note {
+            font-size: 0.9rem;
+            color: #777;
+            text-align: center;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="legal-container">
+    
+    <section id="privacy">
+        <h1>Privacy & Data Protection Policy</h1>
+        <p><strong>Effective Date:</strong> January 4, 2026</p>
+
+        <h2>1. Comprehensive Data Collection</h2>
+        <p>At ZenTail, we recognize that your privacy and the privacy of your pets are of paramount importance. We collect data to provide a seamless veterinary connection service. This data collection is categorized as follows:</p>
+        
+        <h3>1.1 User Personal Information</h3>
+        <p>We collect identifiable information including your full name, primary email address, and verified mobile number. This data is essential for maintaining your user profile and allowing clinics to contact you regarding your pet's health status.</p>
+
+        <h3>1.2 Pet Biological and Health Data</h3>
+        <p>To assist veterinarians in preparing for your visit, we store profiles for your animals, including name, species, breed, age, weight, and existing medical conditions or allergies. This information is encrypted and only transmitted to a clinic when a booking request is initiated.</p>
+
+        
+
+        <h2>2. Geolocation and Map Services</h2>
+        <p>Our "Vet Locator" tool utilizes the Leaflet.js and OpenStreetMap APIs. When you select "Use My Location," your browser coordinates are processed to find the nearest partner clinics. We do not maintain a permanent log of your precise movements; location data is session-based and discarded upon closing the application.</p>
+
+        <div class="highlight-box">
+            <strong>Data Security Guarantee:</strong> ZenTail employs AES-256 encryption for all database entries stored in MongoDB Atlas. We perform weekly security audits to ensure your pet's medical history remains confidential.
+        </div>
+
+        <h2>3. Third-Party Disclosures</h2>
+        <p>We do not sell, trade, or rent your personal information to marketing firms. Data is only shared with licensed veterinary clinics that you choose to interact with. We may disclose data if required by law to prevent animal cruelty or to comply with a judicial proceeding.</p>
+    </section>
+
+    <div class="page-break"><span class="page-label">Page 2: Terms of Service</span></div>
+
+    <section id="terms">
+        <h1>Terms of Service Agreement</h1>
+        
+        <h2>1. User Obligations and Account Security</h2>
+        <p>By accessing ZenTail, you agree to provide true, accurate, and current information. You are responsible for all activities that occur under your session. ZenTail is intended for use by individuals aged 18 and older.</p>
+
+        
+
+        <h2>2. Professional Relationship Disclaimer</h2>
+        <h3>2.1 Not a Medical Provider</h3>
+        <p>ZenTail is a technology platform, NOT a veterinary clinic. The information provided on this website, including articles and locator data, does not constitute professional medical advice. Always seek the advice of your veterinarian with any questions you may have regarding a pet's medical condition.</p>
+
+        <h3>2.2 Emergency Use</h3>
+        <p>This platform is for scheduled appointments only. If your pet is experiencing a life-threatening emergency (seizures, severe bleeding, or poisoning), do not use the booking form. Contact an emergency animal hospital immediately.</p>
+
+        <h2>3. Intellectual Property Rights</h2>
+        <p>All content, including the ZenTail logo, custom "Paw-Loader" animations, UI designs, and the database architecture, is the exclusive property of ZenTail. Unauthorized reproduction, scraping, or "framing" of our data is strictly prohibited and subject to legal action under digital copyright laws.</p>
+
+        <h2>4. Acceptable Conduct</h2>
+        <ul>
+            <li><strong>No Ghost-Booking:</strong> Repeatedly booking slots and failing to show up may result in account suspension.</li>
+            <li><strong>No Data Scraping:</strong> You may not use automated systems to extract clinic lists or contact information from our locator.</li>
+            <li><strong>Respectful Interaction:</strong> Any harassment of clinic staff or ZenTail admins will result in a permanent ban.</li>
+        </ul>
+    </section>
+
+    <div class="page-break"><span class="page-label">Page 3: Booking & Liability</span></div>
+
+    <section id="liability">
+        <h1>Appointment & Liability Policy</h1>
+
+        <h2>1. The Booking Process</h2>
+        <p>ZenTail facilitates the communication between the pet owner and the clinic. A booking submitted via our "Book a Slot" form is considered a <strong>"Request"</strong> and does not guarantee a reserved time until the status on your dashboard changes to <strong>"Approved"</strong>.</p>
+
+        
+
+        <h3>1.1 Status Definitions</h3>
+        <ul>
+            <li><strong>Pending:</strong> Your request is waiting for clinic review.</li>
+            <li><strong>Confirmed/Approved:</strong> The clinic has officially blocked the time for you.</li>
+            <li><strong>Cancelled:</strong> The clinic is unable to fulfill the request. A reason (e.g., "Doctor Unavailable") will be provided in the tracking dashboard.</li>
+        </ul>
+
+        <h2>2. Limitation of Liability</h2>
+        <p>ZenTail and its developers are not liable for any damages, health complications, or financial losses arising from:</p>
+        <ul>
+            <li>Clinical errors or medical malpractice performed at a third-party clinic found via our locator.</li>
+            <li>Inaccuracies in clinic operating hours or contact information provided by map APIs.</li>
+            <li>Technical failures preventing the delivery of "Real-time" status updates.</li>
+        </ul>
+
+        <h2>3. Indemnification</h2>
+        <p>You agree to indemnify and hold harmless ZenTail, its officers, and developers from any claims or demands made by any third party due to or arising out of your breach of these Terms, or your violation of any law or the rights of a third party.</p>
+
+        <div class="footer-note">
+            © 2026 ZenTail. All Rights Reserved. <br> Contact: zentailofficial@gmail.com
+        </div>
+    </section>
+
+</div>
+
+</body>
+</html>

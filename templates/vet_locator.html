@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZenTail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./static/css/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Nunito:wght@500;700&family=Micro+5&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+ <style>
+    /* New styles for the location button */
+    .map-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 95%;
+      margin: 0 auto 15px auto;
+    }
+    #locateBtn {
+      background: #bb6a7f;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(187, 106, 127, 0.3);
+      transition: transform 0.2s, background 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #locateBtn:hover {
+      background: #a55a6d;
+      transform: translateY(-2px);
+    }
+    #locateBtn:active {
+      transform: translateY(0);
+    }
+    .user-location-marker {
+      background: #4285F4;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 0 10px rgba(66, 133, 244, 0.6);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(66, 133, 244, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Full-screen animation overlay -->
+  <div id="theme-animation-overlay"></div>
+
+  <!-- Loader -->
+  <div id="zentail-loader" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#fff;z-index:9998;display:flex;align-items:center;justify-content:center;transition:opacity 0.5s;">
+    <div class="loader-inner">
+      <span class="loader-paw">
+        <i class="fa-solid fa-paw" style="font-size:2.3em;color:#bb6a7f;"></i>
+      </span>
+      <span class="loader-text" style="font-size:1.12em; color: #444; margin-left: 10px;">Loading ZenTail...</span>
+    </div>
+  </div>
+
+ <header class="zentail-header">
+    <div class="zentail-header-top">
+        <div class="header-section section-left">
+            <span class="zentail-title">ZENTAIL</span>
+        </div>
+
+        <div class="header-section section-center">
+            <div class="zentail-logo">
+                <img src="../static/images/combain.png" alt="ZenTail Logo" onerror="this.onerror=null;this.src='https://placehold.co/120x120/f9f9f9/bb6a7f?text=PET'">
+            </div>
+        </div>
+        
+        <div class="header-section section-right">
+            <div class="zentail-account-theme">
+                
+
+                <div class="roll-btn account-roll">
+                    <a href="{{ url_for('logout') }}" class="slide-btn logout-btn" id="logoutBtn">
+                        <span>Logout</span>
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                    
+                    <button class="icon-btn account-btn" id="accountToggle">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+                </div>
+                <button class="icon-btn theme-btn" id="themeToggle">
+                    <i class="fa-solid fa-sun" id="theme-light-icon"></i>
+                    <i class="fa-solid fa-moon" id="theme-dark-icon" style="display:none;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('home') }}" >HOME</a></li>
+            <li><a href="{{ url_for('products') }}">PRODUCTS</a></li>
+            <li><a href="{{ url_for('breeds') }}">BREEDS</a></li>
+            <li><a href="{{ url_for('vet_locator') }}" class="active">VET LOCATOR</a></li>
+            <li><a href="{{ url_for('book_slot') }}">BOOK SLOT</a></li>
+            <li><a href="{{ url_for('about') }}">ABOUT US</a></li>
+        </ul>
+    </nav>
+</header>
+
+
+<br><br>
+<div class="map-header">
+    <h2 style="margin: 0; font-family: 'Nunito', sans-serif;">Veterinary Clinics Near You</h2>
+    <button id="locateBtn" onclick="getUserLocation()">
+        <i class="fa-solid fa-location-crosshairs"></i> Use My Location
+    </button>
+</div>
+
+<div id="map" style="width:95%; left:50px; height:600px;"></div>
+
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+<script>
+let map;
+let routingControl = null;
+let userLatLng = null; // real user location
+
+// 1) Hard-coded Coimbatore vet clinics
+
+  const CBE_VET_CLINICS = [
+  { name: "Cotton City Pet's Poly Clinic", lat: 11.0150, lng: 76.9550, address: "Alagesan Road, Saibaba Colony" },
+  { name: "SKS Veterinary Hospital", lat: 11.0100, lng: 76.9500, address: "Bharathi Park, Saibaba Colony" },
+  { name: "Pet Zone Veterinary Clinic", lat: 11.0200, lng: 76.9600, address: "RS Puram" },
+  { name: "A To Z Pet Polyclinic", lat: 11.0250, lng: 76.9700, address: "Avinashi Road, Peelamedu" },
+  { name: "Veterinary Poly Clinic", lat: 11.0000, lng: 76.9650, address: "Townhall" },
+  { name: "Paws Pet Care Clinic", lat: 11.0300, lng: 76.9550, address: "Saravanampatti" },
+  { name: "Selva Veterinary Clinic", lat: 11.0080, lng: 76.9680, address: "Peelamedu" },
+  { name: "Sanchu Animal Hospital", lat: 11.0160, lng: 76.9520, address: "NTC Murugan Mills" },
+  { name: "JP Pet Hospital", lat: 11.0220, lng: 76.9620, address: "RS Puram, Venkata Krishna Rd" },
+  { name: "Blue Cross of India CBE", lat: 11.0125, lng: 76.9652, address: "Avinashi Road, Peelamedu" },
+
+  { name: "City Pets Poly Clinic", lat: 11.0140, lng: 76.9530, address: "Saibaba Colony" },
+  { name: "RNK Veterinary Clinic", lat: 11.0180, lng: 76.9570, address: "Saibaba Colony" },
+  { name: "Animal Kingdom Vet", lat: 11.0089, lng: 76.9681, address: "Gandhipuram" },
+  { name: "Vets4Pets Clinic", lat: 11.0254, lng: 76.9610, address: "Saibaba Colony" },
+
+  { name: "SKS Peelamedu Branch", lat: 11.0250, lng: 76.9700, address: "Bharathi Colony Road, Peelamedu" },
+  { name: "Pet Speciality Hospitality", lat: 11.0201, lng: 76.9603, address: "RS Puram" },
+
+  { name: "Pets Veterinary Clinic", lat: 11.0120, lng: 76.9620, address: "Pankaja Mill Road, Ramanathapuram" },
+  { name: "Happy Paws Centre", lat: 10.9955, lng: 76.9590, address: "Singanallur" },
+
+  { name: "Govt Veterinary Hospital Vilankurichi", lat: 11.0350, lng: 76.9750, address: "Vilankurichi" },
+  { name: "Govt Veterinary Hospital Kadampadi", lat: 11.0400, lng: 76.9800, address: "Maathappur Road" },
+    { name: "PETS & VETS Clinic", lat: 11.0450, lng: 76.9450, address: "New Thillai Nagar, Vadavalli" },
+  { name: "Thiru's Pet Clinic", lat: 11.0302, lng: 76.9487, address: "Thudiyalur" },
+
+  { name: "Ram Poly Clinic", lat: 11.0020, lng: 76.9670, address: "New Scheme Road" },
+  { name: "Manohara Pets Clinic", lat: 11.0280, lng: 76.9520, address: "Uppilipalayam" },
+  { name: "S V Pet Care", lat: 11.0320, lng: 76.9400, address: "Thadagam Road, Venkitapuram" },
+  { name: "Blue Plus Pet Hospital", lat: 11.0180, lng: 76.9580, address: "Coimbatore Central" },
+  { name: "JSR Pet Multi Speciality", lat: 11.0240, lng: 76.9300, address: "West Ramalinga Road" },
+  { name: "JM Pet Clinic", lat: 11.0380, lng: 76.9820, address: "Veerapandi, Periyanaickenpalayam" },
+  { name: "Coimbatore Veterinary College Hospital", lat: 11.0240, lng: 76.9305, address: "Hebron Road, Rampura" },
+  { name: "Pet Care Coimbatore", lat: 11.0168, lng: 76.9558, address: "Race Course Road" },
+
+  { name: "Humane Animal Hospital", lat: 11.0050, lng: 76.9400, address: "Cheran Nagar, Selvapuram North" },
+  { name: "Sri Vinayaga Pets Clinic", lat: 11.0062, lng: 76.9650, address: "Sowripalayam Road" },
+  { name: "Kovai Veterinary Clinic", lat: 11.0031, lng: 76.9742, address: "Sowripalayam Pirivu, Ramanathapuram" },
+  { name: "Sukadev Animal Care", lat: 11.0192, lng: 76.9691, address: "Raju Naidu Layout, Gandhipuram" },
+  { name: "Copaw Pets Poly Clinic", lat: 11.0615, lng: 76.9442, address: "Thudiyalur / Kurudampalayam" },
+
+  { name: "Tritails Veterinary Hospital", lat: 11.0028, lng: 77.0265, address: "Trichy Road, Ondipudur" },
+  { name: "Nova Pet Clinic", lat: 10.9801, lng: 76.9559, address: "Sundarapuram, Kurichi" },
+  { name: "Sree Meenakshi Pet Clinic", lat: 11.0178, lng: 76.9390, address: "Koundampalayam" },
+  { name: "Kovai Pet Clinic & Surgery", lat: 11.0185, lng: 76.9422, address: "Saibaba Colony Extension" },
+  { name: "Royal Pet Clinic", lat: 11.0360, lng: 76.9495, address: "Vadavalli" },
+    { name: "PETS & VETS Clinic", lat: 11.0450, lng: 76.9450, address: "New Thillai Nagar, Vadavalli" },
+  { name: "Thiru's Pet Clinic", lat: 11.0302, lng: 76.9487, address: "Thudiyalur" },
+
+  { name: "Ram Poly Clinic", lat: 11.0020, lng: 76.9670, address: "New Scheme Road" },
+ 
+  { name: "S V Pet Care", lat: 11.0320, lng: 76.9400, address: "Thadagam Road, Venkitapuram" },
+  { name: "Blue Plus Pet Hospital", lat: 11.0180, lng: 76.9580, address: "Coimbatore Central" },
+  { name: "JSR Pet Multi Speciality", lat: 11.0240, lng: 76.9300, address: "West Ramalinga Road" },
+  { name: "JM Pet Clinic", lat: 11.0380, lng: 76.9820, address: "Veerapandi, Periyanaickenpalayam" },
+  { name: "Coimbatore Veterinary College Hospital", lat: 11.0240, lng: 76.9305, address: "Hebron Road, Rampura" },
+  { name: "Pet Care Coimbatore", lat: 11.0168, lng: 76.9558, address: "Race Course Road" },
+
+  { name: "Humane Animal Hospital", lat: 11.0050, lng: 76.9400, address: "Cheran Nagar, Selvapuram North" },
+  { name: "Sri Vinayaga Pets Clinic", lat: 11.0062, lng: 76.9650, address: "Sowripalayam Road" },
+  { name: "Kovai Veterinary Clinic", lat: 11.0031, lng: 76.9742, address: "Sowripalayam Pirivu, Ramanathapuram" },
+  { name: "Sukadev Animal Care", lat: 11.0192, lng: 76.9691, address: "Raju Naidu Layout, Gandhipuram" },
+  { name: "Copaw Pets Poly Clinic", lat: 11.0615, lng: 76.9442, address: "Thudiyalur / Kurudampalayam" },
+
+  { name: "Tritails Veterinary Hospital", lat: 11.0028, lng: 77.0265, address: "Trichy Road, Ondipudur" },
+  { name: "Nova Pet Clinic", lat: 10.9801, lng: 76.9559, address: "Sundarapuram, Kurichi" },
+  { name: "Sree Meenakshi Pet Clinic", lat: 11.0178, lng: 76.9390, address: "Koundampalayam" },
+  { name: "Kovai Pet Clinic & Surgery", lat: 11.0185, lng: 76.9422, address: "Saibaba Colony Extension" },
+  { name: "Royal Pet Clinic", lat: 11.0360, lng: 76.9495, address: "Vadavalli" },
+
+  { name: "ABC Pet Clinic", lat: 11.0292, lng: 76.9481, address: "Saibaba Colony Extension" },
+  { name: "Paw & Claw Veterinary Clinic", lat: 11.0352, lng: 76.9548, address: "Nava India, Peelamedu" },
+  { name: "Happy Tails Veterinary Clinic", lat: 11.0287, lng: 76.9614, address: "Gandhipuram Cross Cut Road" },
+  { name: "Pawsome Pet Clinic", lat: 11.0130, lng: 76.9435, address: "Udayampalayam" },
+  { name: "MediPets Veterinary Clinic", lat: 11.0028, lng: 76.9718, address: "Ramanathapuram Main Road" },
+
+  { name: "Blue Feather Pet Clinic", lat: 11.0435, lng: 76.9440, address: "Vadavalli Perur Road" },
+  { name: "Hill View Pet Clinic", lat: 11.0520, lng: 76.9342, address: "Perur" },
+  { name: "Little Paws Clinic", lat: 11.0780, lng: 76.9388, address: "Poozhithottam, Thudiyalur" },
+  { name: "Pets 360 Clinic", lat: 11.0221, lng: 76.9789, address: "Varadharajapuram" },
+  { name: "Petz Care Veterinary Station", lat: 11.0081, lng: 76.9792, address: "SIHS Colony" },
+
+  { name: "Prime Pet Clinic", lat: 11.0074, lng: 76.9420, address: "K.K. Pudur" },
+  { name: "Cozy Pet Clinic", lat: 11.0194, lng: 76.9390, address: "Koundampalayam" },
+  { name: "Vet Point Multi Care", lat: 10.9981, lng: 76.9691, address: "Ukkadam" },
+  { name: "Snow Pet Veterinary Clinic", lat: 11.0022, lng: 76.9870, address: "Ondipudur" },
+  { name: "Care & Cure Pet Clinic", lat: 10.9942, lng: 76.9645, address: "Singanallur ESIC area" },
+
+  { name: "Happy Paws Veterinary Care", lat: 11.0189, lng: 76.9755, address: "Hope College" },
+  { name: "Petz Haven Veterinary Clinic", lat: 11.0265, lng: 76.9580, address: "R.S. Puram West" },
+  { name: "Furry Friends Clinic", lat: 11.0451, lng: 76.9662, address: "Vellakinar" },
+  { name: "A1 Pet Clinic", lat: 10.9804, lng: 76.9588, address: "Kuniyamuthur" },
+  { name: "Pet Zone Care Clinic", lat: 11.0540, lng: 76.9490, address: "Vadakovai" },
+  { name: "Green Park Vet Clinic", lat: 11.0068, lng: 76.9544, address: "Tatabad, Gandhipuram" },
+  { name: "Shree Pet Clinic", lat: 11.0157, lng: 76.9432, address: "Kavundampalayam Main Road" },
+  { name: "VetLine Animal Clinic", lat: 11.0464, lng: 76.9781, address: "Chinniampalayam" },
+  { name: "Care4Pets Veterinary Clinic", lat: 11.0285, lng: 76.9894, address: "Ondipudur Main Road" },
+  { name: "Angel Pet Clinic", lat: 11.0191, lng: 76.9802, address: "Civil Aerodrome Road" },
+
+  { name: "Sri Krishna Pets Clinic", lat: 11.0402, lng: 76.9612, address: "Cheran Ma Nagar" },
+  { name: "Town Pets Clinic", lat: 11.0040, lng: 76.9641, address: "Ukkadam" },
+  { name: "Happy Vet Animal Care", lat: 11.0555, lng: 76.9228, address: "Perur Chettipalayam" },
+  { name: "Prime Care Veterinary Clinic", lat: 11.0211, lng: 76.9729, address: "Peelamedu Pudur" },
+  { name: "SR Pet Health Centre", lat: 11.0364, lng: 76.9880, address: "Karaipudur, Irugur" },
+
+  { name: "Vet & Heal Pet Clinic", lat: 11.0150, lng: 76.9460, address: "Goundampalayam" },
+  { name: "4Paws MultiVet Centre", lat: 11.0360, lng: 76.9419, address: "Velandipalayam" },
+  { name: "PupCare Veterinary Clinic", lat: 11.0065, lng: 76.9805, address: "Singanallur Near Bus Stand" },
+  { name: "VetTrust Pet Clinic", lat: 11.0108, lng: 76.9372, address: "Appanaickenpalayam" },
+  { name: "PetsLife Clinic", lat: 11.0288, lng: 76.9441, address: "Nallampalayam" },
+
+  { name: "Dr. Ramu Pet Clinic", lat: 10.9916, lng: 76.9552, address: "Podanur" },
+  { name: "Happy Paws Clinic", lat: 10.9925, lng: 76.9708, address: "Trichy Road, Sungam" },
+  { name: "Animal Aid Veterinary Clinic", lat: 11.0142, lng: 76.9891, address: "Hopes College" },
+  { name: "Vetri Pet Clinic", lat: 11.0345, lng: 76.9324, address: "Perur Main Road" },
+  { name: "Faith Animal Clinic", lat: 11.0490, lng: 76.9548, address: "Thudiyalur Extension" },
+  { name: "VetCare Animal Hospital", lat: 11.0172, lng: 76.9635, address: "R.S. Puram" },
+  { name: "Paws & Claws Veterinary Clinic", lat: 11.0235, lng: 76.9570, address: "Coimbatore Central" },
+  { name: "PetCare Plus Clinic", lat: 11.0090, lng: 76.9603, address: "Town Hall" },
+  { name: "Dr. Meena Pet Clinic", lat: 11.0118, lng: 76.9685, address: "Gandhipuram" },
+  { name: "FurBall Pet Clinic", lat: 11.0385, lng: 76.9522, address: "Saravanampatti" },
+
+  { name: "Happy Tails Vet Hospital", lat: 11.0165, lng: 76.9784, address: "Ramanathapuram" },
+  { name: "Pawsitive Care Vet Clinic", lat: 11.0268, lng: 76.9705, address: "Peelamedu" },
+  { name: "Coimbatore Pets Clinic", lat: 11.0159, lng: 76.9451, address: "Saibaba Colony" },
+  { name: "VetSmart Animal Clinic", lat: 11.0028, lng: 76.9659, address: "Ukkadam" },
+  { name: "TailWaggers Veterinary Care", lat: 11.0455, lng: 76.9400, address: "Vadavalli" },
+
+  { name: "VetWorld Animal Clinic", lat: 11.0075, lng: 76.9720, address: "Ramanathapuram Main Road" },
+  { name: "Animal Wellness Centre", lat: 11.0192, lng: 76.9665, address: "RS Puram West" },
+  { name: "Pawfect Vet Care", lat: 11.0342, lng: 76.9478, address: "Peelamedu Main Road" },
+  { name: "Healthy Paws Veterinary Clinic", lat: 11.0125, lng: 76.9555, address: "Race Course Road" },
+  { name: "Fur Haven Pet Clinic", lat: 11.0280, lng: 76.9515, address: "Uppilipalayam" },
+
+  { name: "Vet Clinic Plus", lat: 11.0062, lng: 76.9490, address: "Selvapuram" },
+  { name: "Companion Pet Clinic", lat: 11.0308, lng: 76.9585, address: "RS Puram" },
+  { name: "PetLine Veterinary Hospital", lat: 11.0321, lng: 76.9402, address: "Thadagam Road" },
+  { name: "Caring Paws Vet Clinic", lat: 11.0184, lng: 76.9639, address: "Gandhipuram" },
+  { name: "Little Paws Vet Care", lat: 11.0245, lng: 76.9315, address: "Rampura" },
+  { name: "Royal Paws Veterinary Clinic", lat: 11.0127, lng: 76.9582, address: "RS Puram" },
+  { name: "Pawtopia Vet Clinic", lat: 11.0263, lng: 76.9617, address: "Saibaba Colony" },
+  { name: "VetCare Plus Animal Hospital", lat: 11.0358, lng: 76.9752, address: "Vilankurichi" },
+  { name: "Happy Paws Multi-Speciality Clinic", lat: 10.9958, lng: 76.9595, address: "Singanallur" },
+  { name: "Fur & Feather Vet Clinic", lat: 11.0189, lng: 76.9584, address: "Coimbatore Central" },
+
+  { name: "Animal Care Coimbatore", lat: 11.0247, lng: 76.9308, address: "Rampura" },
+  { name: "Paws N Claws Veterinary Clinic", lat: 11.0165, lng: 76.9547, address: "Race Course Road" },
+  { name: "VetCare Animal Hospital", lat: 11.0380, lng: 76.9820, address: "Veerapandi Periyanaickenpalayam" },
+  { name: "Blue Cross Veterinary Hospital", lat: 11.0124, lng: 76.9651, address: "Peelamedu" },
+  { name: "Pets World Veterinary Clinic", lat: 11.0250, lng: 76.9705, address: "Peelamedu" },
+
+  { name: "Healthy Tails Vet Clinic", lat: 11.0089, lng: 76.9680, address: "Gandhipuram" },
+  { name: "Pawsitive Veterinary Hospital", lat: 11.0220, lng: 76.9625, address: "RS Puram" },
+  { name: "Blue Paw Pet Clinic", lat: 11.0160, lng: 76.9525, address: "NTC Murugan Mills" },
+  { name: "City Pet Care Clinic", lat: 11.0142, lng: 76.9532, address: "Saibaba Colony" },
+  { name: "Manohara Vet Clinic", lat: 11.0280, lng: 76.9522, address: "Uppilipalayam" },
+
+  { name: "VetPoint Pet Clinic", lat: 11.0320, lng: 76.9405, address: "Thadagam Road" },
+  { name: "Blue Plus Pet Hospital", lat: 11.0180, lng: 76.9580, address: "Coimbatore Central" },
+  { name: "JSR Pet Multi-Speciality Clinic", lat: 11.0240, lng: 76.9300, address: "West Ramalinga Road" },
+  { name: "JM Pet Clinic", lat: 11.0380, lng: 76.9820, address: "Veerapandi Periyanaickenpalayam" },
+  { name: "Coimbatore Veterinary College Hospital", lat: 11.0240, lng: 76.9305, address: "Hebron Road, Rampura" },
+
+ 
+  { name: "SKS Veterinary Hospital", lat: 11.0100, lng: 76.9500, address: "Bharathi Park, Saibaba Colony" },
+  { name: "Pet Zone Veterinary Clinic", lat: 11.0200, lng: 76.9600, address: "RS Puram" },
+  { name: "A To Z Pet Polyclinic", lat: 11.0250, lng: 76.9700, address: "Avinashi Road, Peelamedu" },
+  { name: "Veterinary Poly Clinic", lat: 11.0000, lng: 76.9650, address: "Townhall" },
+  { name: "Paws Pet Care Clinic", lat: 11.0300, lng: 76.9550, address: "Saravanampatti" },
+  { name: "Selva Veterinary Clinic", lat: 11.0080, lng: 76.9680, address: "Peelamedu" },
+  { name: "Sanchu Animal Hospital", lat: 11.0160, lng: 76.9520, address: "NTC Murugan Mills" },
+  { name: "JP Pet Hospital", lat: 11.0220, lng: 76.9620, address: "RS Puram, Venkata Krishna Rd" },
+  { name: "Blue Cross of India CBE", lat: 11.0125, lng: 76.9652, address: "Avinashi Road, Peelamedu" },
+
+  { name: "City Pets Poly Clinic", lat: 11.0140, lng: 76.9530, address: "Saibaba Colony" },
+  { name: "RNK Veterinary Clinic", lat: 11.0180, lng: 76.9570, address: "Saibaba Colony" },
+  { name: "Animal Kingdom Vet", lat: 11.0089, lng: 76.9681, address: "Gandhipuram" },
+  { name: "Vets4Pets Clinic", lat: 11.0254, lng: 76.9610, address: "Saibaba Colony" },
+
+  { name: "SKS Peelamedu Branch", lat: 11.0250, lng: 76.9700, address: "Bharathi Colony Road, Peelamedu" },
+  { name: "Pet Speciality Hospitality", lat: 11.0201, lng: 76.9603, address: "RS Puram" },
+
+  { name: "Pets Veterinary Clinic", lat: 11.0120, lng: 76.9620, address: "Pankaja Mill Road, Ramanathapuram" },
+  { name: "Happy Paws Centre", lat: 10.9955, lng: 76.9590, address: "Singanallur" },
+
+  { name: "Govt Veterinary Hospital Vilankurichi", lat: 11.0350, lng: 76.9750, address: "Vilankurichi" },
+  { name: "Govt Veterinary Hospital Kadampadi", lat: 11.0400, lng: 76.9800, address: "Maathappur Road" },
+
+  { name: "PETS & VETS Clinic", lat: 11.0450, lng: 76.9450, address: "New Thillai Nagar, Vadavalli" },
+  { name: "Thiru's Pet Clinic", lat: 11.0302, lng: 76.9487, address: "Thudiyalur" },
+
+  { name: "Ram Poly Clinic", lat: 11.0020, lng: 76.9670, address: "New Scheme Road" },
+  { name: "Manohara Pets Clinic", lat: 11.0280, lng: 76.9520, address: "Uppilipalayam" },
+  { name: "S V Pet Care", lat: 11.0320, lng: 76.9400, address: "Thadagam Road, Venkitapuram" },
+  { name: "Blue Plus Pet Hospital", lat: 11.0180, lng: 76.9580, address: "Coimbatore Central" },
+  { name: "JSR Pet Multi Speciality", lat: 11.0240, lng: 76.9300, address: "West Ramalinga Road" },
+  { name: "JM Pet Clinic", lat: 11.0380, lng: 76.9820, address: "Veerapandi Periyanaickenpalayam" },
+  { name: "Coimbatore Veterinary College Hospital", lat: 11.0240, lng: 76.9305, address: "Hebron Road, Rampura" },
+  { name: "Pet Care Coimbatore", lat: 11.0168, lng: 76.9558, address: "Race Course Road" },
+
+  { name: "Humane Animal Hospital", lat: 11.0050, lng: 76.9400, address: "Cheran Nagar, Selvapuram North" },
+  { name: "Sri Vinayaga Pets Clinic", lat: 11.0062, lng: 76.9650, address: "Sowripalayam Road" },
+  { name: "Kovai Veterinary Clinic", lat: 11.0031, lng: 76.9742, address: "Sowripalayam Pirivu, Ramanathapuram" },
+  { name: "Sukadev Animal Care", lat: 11.0192, lng: 76.9691, address: "Raju Naidu Layout, Gandhipuram" },
+  { name: "Copaw Pets Poly Clinic", lat: 11.0615, lng: 76.9442, address: "Thudiyalur / Kurudampalayam" },
+
+  { name: "Tritails Veterinary Hospital", lat: 11.0028, lng: 77.0265, address: "Trichy Road, Ondipudur" },
+  { name: "Nova Pet Clinic", lat: 10.9801, lng: 76.9559, address: "Sundarapuram, Kurichi" },
+  { name: "Sree Meenakshi Pet Clinic", lat: 11.0178, lng: 76.9390, address: "Koundampalayam" },
+  { name: "Kovai Pet Clinic & Surgery", lat: 11.0185, lng: 76.9422, address: "Saibaba Colony Extension" },
+  { name: "Royal Pet Clinic", lat: 11.0360, lng: 76.9495, address: "Vadavalli" },
+
+  { name: "ABC Pet Clinic", lat: 11.0292, lng: 76.9481, address: "Saibaba Colony Extension" },
+  { name: "Paw & Claw Veterinary Clinic", lat: 11.0352, lng: 76.9548, address: "Nava India, Peelamedu" },
+  { name: "Happy Tails Veterinary Clinic", lat: 11.0287, lng: 76.9614, address: "Gandhipuram Cross Cut Road" },
+  { name: "Pawsome Pet Clinic", lat: 11.0130, lng: 76.9435, address: "Udayampalayam" },
+  { name: "MediPets Veterinary Clinic", lat: 11.0028, lng: 76.9718, address: "Ramanathapuram Main Road" },
+
+  { name: "Blue Feather Pet Clinic", lat: 11.0435, lng: 76.9440, address: "Vadavalli Perur Road" },
+  { name: "Hill View Pet Clinic", lat: 11.0520, lng: 76.9342, address: "Perur" },
+  { name: "Little Paws Clinic", lat: 11.0780, lng: 76.9388, address: "Poozhithottam, Thudiyalur" },
+  { name: "Pets 360 Clinic", lat: 11.0221, lng: 76.9789, address: "Varadharajapuram" },
+  { name: "Petz Care Veterinary Station", lat: 11.0081, lng: 76.9792, address: "SIHS Colony" },
+
+  { name: "Prime Pet Clinic", lat: 11.0074, lng: 76.9420, address: "K.K. Pudur" },
+  { name: "Cozy Pet Clinic", lat: 11.0194, lng: 76.9390, address: "Koundampalayam" },
+  { name: "Vet Point Multi Care", lat: 10.9981, lng: 76.9691, address: "Ukkadam" },
+  { name: "Snow Pet Veterinary Clinic", lat: 11.0022, lng: 76.9870, address: "Ondipudur" },
+  { name: "Care & Cure Pet Clinic", lat: 10.9942, lng: 76.9645, address: "Singanallur ESIC area" },
+
+  { name: "Happy Paws Veterinary Care", lat: 11.0189, lng: 76.9755, address: "Hope College" },
+  { name: "Petz Haven Veterinary Clinic", lat: 11.0265, lng: 76.9580, address: "R.S. Puram West" },
+  { name: "Furry Friends Clinic", lat: 11.0451, lng: 76.9662, address: "Vellakinar" },
+  { name: "A1 Pet Clinic", lat: 10.9804, lng: 76.9588, address: "Kuniyamuthur" },
+  { name: "Pet Zone Care Clinic", lat: 11.0540, lng: 76.9490, address: "Vadakovai" }
+];
+
+
+
+// 2) Bright paw marker
+const petIcon = L.divIcon({
+  className: 'custom-paw-marker purple',
+  html: '🐾',
+  iconSize: [34, 34],
+  iconAnchor: [17, 34],
+  popupAnchor: [0, -30]
+});
+
+// 3) Init base map
+function initCBEMap() {
+  
+  // Define the bounding box for Coimbatore (SW corner and NE corner)
+  const CBE_BOUNDS = L.latLngBounds(
+    [10.95, 76.85], // SW (South-West) Latitude, Longitude
+    [11.10, 77.10]  // NE (North-East) Latitude, Longitude
+  );
+
+  // Initialize the map
+  map = L.map('map', {
+      // 1. CRITICAL: Restrict the map viewport to the defined bounds
+      maxBounds: CBE_BOUNDS, 
+      // 2. Optional: Prevents users from zooming out too far
+      minZoom: 10 
+  });
+  
+  // Set the map view to fit the CBE bounds exactly upon initialization
+  map.fitBounds(CBE_BOUNDS); 
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap | ZenTail CBE | ${CBE_VET_CLINICS.length} 🐾 Vet Clinics',
+    // 3. Optional: Ensure the tile layer itself doesn't zoom out too far
+    minZoom: 10 
+  }).addTo(map);
+  
+  map._zoomedToUser = false;
+}
+// 4) Add markers and auto-fit bounds
+function addAllVetMarkers() {
+  const bounds = [];
+  CBE_VET_CLINICS.forEach((clinic, index) => {
+    const marker = L.marker([clinic.lat, clinic.lng], { icon: petIcon })
+      .addTo(map)
+      .bindPopup(`
+        <div style="min-width: 260px; max-width: 300px; font-family: Inter, sans-serif;">
+          <div style="font-size: 16px; font-weight: 700; color: #bb8cf7; margin-bottom: 6px;">
+            🐾 ${clinic.name}
+          </div>
+          <div style="font-size: 13px; color: #444; margin-bottom: 12px; line-height: 1.4;">
+            📍 <strong>${clinic.address}</strong><br/>
+            <span style="color: #666;">Coimbatore, Tamil Nadu</span>
+          </div>
+          <button onclick="showRouteToVet(${index})"
+                  style="width: 100%; background: linear-gradient(135deg, #bb8cf7 0%, #77f2e5 100%);
+                         color: white; border: none; padding: 10px 14px; border-radius: 8px;
+                         font-weight: 600; cursor: pointer; font-size: 13px;
+                         box-shadow: 0 3px 10px rgba(187,140,247,0.4);">
+            🗺️ Get Directions
+          </button>
+        </div>
+      `);
+    bounds.push(marker.getLatLng());
+  });
+  if (bounds.length) {
+    map.fitBounds(L.latLngBounds(bounds), { padding: [20, 20] });
+  }
+}
+
+// 5) Get user current location
+
+
+// 6) Route from user to selected clinic
+window.showRouteToVet = function (vetIndex) {
+  const clinic = CBE_VET_CLINICS[vetIndex];
+
+  if (!userLatLng) {
+    alert("Click 'Use my current location' first to set your starting point.");
+    return;
+  }
+
+  if (routingControl) {
+    map.removeControl(routingControl);
+  }
+
+  routingControl = L.Routing.control({
+    waypoints: [userLatLng, L.latLng(clinic.lat, clinic.lng)],
+    routeWhileDragging: false,
+    addWaypoints: false,
+    createMarker: () => null
+  }).addTo(map);
+
+  map.fitBounds(routingControl.getBounds());
+};
+
+// 7) Start map when page loads
+window.addEventListener('load', () => {
+  initCBEMap();
+  addAllVetMarkers();
+});
+
+
+function sendLocationToServer() {
+  if (!navigator.geolocation) {
+    alert("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const payload = {
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      };
+
+      fetch("/save-location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    },
+    (err) => {
+      console.warn("Geo error:", err);
+      alert("Enable GPS / location permission to use this feature.");
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+
+// Function to convert GPS to coordinates and update map
+function getUserLocation() {
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+    }
+    
+    const btn = document.getElementById('locateBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            userLatLng = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            
+            if (userMarker) map.removeLayer(userMarker);
+            
+            userMarker = L.marker([userLatLng.lat, userLatLng.lng], {
+                icon: L.divIcon({ 
+                    className: 'user-location-marker', 
+                    html: '',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                })
+            }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+            
+            map.setView([userLatLng.lat, userLatLng.lng], 14);
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Location Set';
+            setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Update Location'; }, 3000);
+        },
+        (err) => {
+            alert("Unable to find location. Please ensure GPS is enabled.");
+            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> Use My Location';
+        },
+        { enableHighAccuracy: true }
+    );
+}
+
+window.showRouteToVet = function(index) {
+    if (!userLatLng) {
+        alert("We need your location for directions. Click 'Use My Location' first!");
+        getUserLocation();
+        return;
+    }
+
+    const vet = CBE_VET_CLINICS[index];
+    if (routingControl) map.removeControl(routingControl);
+
+    routingControl = L.Routing.control({
+        waypoints: [
+            L.latLng(userLatLng.lat, userLatLng.lng),
+            L.latLng(vet.lat, vet.lng)
+        ],
+        lineOptions: { styles: [{ color: '#bb6a7f', weight: 6, opacity: 0.8 }] },
+        routeWhileDragging: false,
+        addWaypoints: false,
+        createMarker: () => null
+    }).addTo(map);
+
+    map.closePopup();
+};
+
+window.onload = initMap;
+</script>
+
+
+
+
+   <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        <div class="footer-logo">ZENTAIL</div>
+        <div class="quick-links">
+            <span class="quick-links-title">Quick Links</span>
+            <div class="quick-links-columns">
+                <div>
+                    <a href="{{ url_for('products') }}">Products</a>
+                    <a href="{{ url_for('vet_locator') }}">Vet Locator</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('breeds') }}">Breeds</a>
+                    <a href="{{ url_for('about') }}">About Us</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('book_slot') }}">Book Slots</a>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="footer-right">
+        <span class="contact-title">Contact us</span>
+        <p>Email: zentailofficials@gmail.com<br>
+           Phone: +91 830 00 22 991
+        </p><br>
+        <div class="touch-in">
+          <span class="contact-title">Touch in</span>
+          <div class="social-icons"><br>
+            <!-- Placeholder image URLs for social icons -->
+            <a href="#"><img height="35px" width="35px" src="../static/images/instagram.svg" alt="Instagram" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=IG'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/facebook.svg" alt="Facebook" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=FB'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/whatsapp.svg" alt="WhatsApp" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=WA'"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom" >
+      <span>Copyrights 2025. All Rights reserved <br><br><a href="{{ url_for('privacy') }}">Privacy</a> | <a href="{{ url_for('privacy') }}">Terms</a></span>
+    </div>
+  </footer>
+
+  <!-- Chatbot Button -->
+<button class="confetti-btn" title="Celebrate!" style="position:fixed;bottom:16px;right:16px;z-index:13;background:var(--baddie-accent);color:#fff;border:none;border-radius:50%;width:58px;height:58px;box-shadow:0 2px 14px #d3b9f7cc;font-size:1.35em;cursor:pointer;outline:none;display:flex;align-items:center;justify-content:center;">
+  <i class="fa-solid fa-paw"></i>
+</button>
+
+<!-- AI Chatbot Modal -->
+<div id="chatbot-popup" style="display:none;position:fixed;bottom:80px;right:20px;width:320px;height:400px;background:#fff;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);z-index:3000;overflow:hidden;flex-direction:column;">
+  <div style="background:#bb6a7f;color:#fff;padding:10px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">
+    ZenTail AI Assistant
+    <span id="chatbot-close" style="cursor:pointer;">&times;</span>
+  </div>
+  <div id="chatbot-messages" style="flex:1;padding:10px;overflow-y:auto;background:#f9f9f9;"></div>
+  <div style="display:flex;border-top:1px solid #ddd;">
+    <input id="chatbot-input" type="text" placeholder="Ask me anything..." style="flex:1;padding:10px;border:none;outline:none;">
+    <button id="chatbot-send" style="background:#bb6a7f;color:#fff;border:none;padding:10px;cursor:pointer;">Send</button>
+  </div>
+</div>
+
+
+
+  <script>
+  // --- Random Pet Doodle SVGs (Placeholder Set) ---
+  const petDoodles = [
+      // Cat Head
+      '<svg viewBox="0 0 48 48"><path d="M24 6c-8.8 0-16 7.2-16 16 0 5.3 2.6 10.3 6.9 13.4l.1.1c.3.2 1.1.7 1.5.8.5.1 1.2.2 2 .2h.5c.6 0 1.2.1 1.8.2.7.1 1.4.2 2.2.2h8.2c.8 0 1.5-.1 2.2-.2.6-.1 1.2-.2 1.8-.2h.5c.8 0 1.5-.1 2-.2.4-.1 1.2-.6 1.5-.8l.1-.1c4.3-3.1 6.9-8.1 6.9-13.4C40 13.2 32.8 6 24 6zM15 14l-4 8 8 2zM33 14l4 8-8 2z" fill="#fce4ec"/><circle cx="20" cy="24" r="1.5" fill="#231f20"/><circle cx="28" cy="24" r="1.5" fill="#231f20"/><path d="M24 30c-2 0-3.5-1.5-3.5-3.5S22 23 24 23s3.5 1.5 3.5 3.5S26 30 24 30z" fill="#ee7676"/></svg>',
+      // Dog Bone
+      '<svg viewBox="0 0 64 64"><path d="M20 28c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM44 28c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM20 32h24c2.2 0 4 1.8 4 4s-1.8 4-4 4H20c-2.2 0-4-1.8-4-4s1.8-4 4-4z" fill="#b08968"/></svg>',
+      // Fish/Scales
+      '<svg viewBox="0 0 48 48"><path d="M40 24c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16z" fill="#77f2e5"/><path d="M24 8c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16c0-1.5-.2-3-.5-4.4C37.3 22.3 35.8 24 34 24s-3.3-1.7-4-4c-1.3 2.3-3.8 4-6.8 4s-5.5-1.7-6.8-4c-1.3 2.3-3.8 4-6.8 4s-5.5-1.7-6.8-4c-1.3 2.3-3.8 4-6.8 4c-3.1 0-5.7-2.7-5.9-6z" fill="rgba(255, 255, 255, 0.4)"/></svg>',
+      // Paw Print
+      '<svg viewBox="0 0 64 64"><path d="M32 6c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16-7.2-16-16-16zM18 42c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM46 42c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM32 48c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z" fill="#bb8cf7"/></svg>',
+      // Rabbit Ears
+      '<svg viewBox="0 0 48 48"><path d="M12 24c0-6.6 5.4-12 12-12s12 5.4 12 12c0 10-6 16-12 16S12 34 12 24z" fill="#fffbe7"/><path d="M18 10c0-2 2-4 4-4s4 2 4 4V14H18V10zM30 10c0-2 2-4 4-4s4 2 4 4V14H30V10z" fill="#fffbe7"/><circle cx="20" cy="22" r="1.5" fill="#231f20"/><circle cx="28" cy="22" r="1.5" fill="#231f20"/><path d="M24 28c-1.5 0-2.5 1-2.5 2.5S22.5 33 24 33s2.5-1 2.5-2.5S25.5 28 24 28z" fill="#ff7a98"/></svg>'
+  ];
+
+  function createRandomDoodles(count = 12) {
+    const body = document.body;
+    const main = document.querySelector('main');
+    const doodleAreaHeight = main ? main.offsetHeight + main.offsetTop : document.documentElement.scrollHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // Remove existing doodles first
+    removeDoodles(); 
+
+    for (let i = 0; i < count; i++) {
+      const randomIndex = Math.floor(Math.random() * petDoodles.length);
+      const svgString = petDoodles[randomIndex];
+      const doodleWrapper = document.createElement('div');
+      doodleWrapper.innerHTML = svgString;
+      doodleWrapper.classList.add('doodle-wrapper');
+      
+      // Keep doodles slightly away from the absolute top/bottom for better visibility
+      const topOffset = 80;
+      const randomTop = Math.floor(Math.random() * (doodleAreaHeight - 2 * topOffset)) + topOffset;
+      const randomLeft = Math.floor(Math.random() * (viewportWidth - 130)) + 30;
+      const randomRotation = Math.floor(Math.random() * 25) - 12;
+      const randomSize = Math.floor(Math.random() * (120 - 60)) + 60;
+      const randomDuration = Math.floor(Math.random() * (12 - 6)) + 6;
+      const randomOpacity = Math.random() * (0.8 - 0.45) + 0.45;
+      
+      doodleWrapper.style.top = `${randomTop}px`;
+      doodleWrapper.style.left = `${randomLeft}px`;
+      doodleWrapper.style.width = `${randomSize}px`;
+      doodleWrapper.style.height = `${randomSize}px`;
+      doodleWrapper.style.transform = `rotate(${randomRotation}deg)`;
+      doodleWrapper.style.animationDuration = `${randomDuration}s`;
+      doodleWrapper.style.opacity = `${randomOpacity}`;
+      body.appendChild(doodleWrapper);
+    }
+  }
+
+  function removeDoodles() {
+    document.querySelectorAll('.doodle-wrapper').forEach(el=>el.remove());
+  }
+
+  // ---- DARK MODE LOGIC WITH ANIMATION ---- //
+  const themeAnimOverlay = document.getElementById('theme-animation-overlay');
+  const lightIcon = document.getElementById('theme-light-icon');
+  const darkIcon = document.getElementById('theme-dark-icon');
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const body = document.body;
+
+  function updateIconVisibility(isDark) {
+      if (lightIcon) lightIcon.style.display = isDark ? 'none' : 'inline';
+      if (darkIcon) darkIcon.style.display = isDark ? 'inline' : 'none';
+  }
+
+  function setTheme(dark) {
+      // 1. Determine if the theme is actually changing
+      const isCurrentlyDark = body.classList.contains('night-mode');
+      if (dark === isCurrentlyDark) return;
+
+      // 2. Start the full-screen animation
+      if (dark) {
+          // Transitioning to Dark Mode
+          themeAnimOverlay.classList.remove('animate-light');
+          themeAnimOverlay.classList.add('animate-dark');
+      } else {
+          // Transitioning to Light Mode
+          themeAnimOverlay.classList.remove('animate-dark');
+          themeAnimOverlay.classList.add('animate-light');
+      }
+      
+      // Disable clicks during animation
+      if (themeToggleBtn) themeToggleBtn.disabled = true;
+
+      // The animation effect: Instant color change + smooth fade-out
+      setTimeout(() => {
+          // 3. Apply the new theme class
+          body.classList.toggle('night-mode', dark);
+          localStorage.setItem('theme', dark ? 'dark' : 'light');
+          
+          // 4. Update the icons and doodles
+          updateIconVisibility(dark);
+          removeDoodles();
+          createRandomDoodles(12);
+
+          // 5. Fade out the overlay
+          themeAnimOverlay.style.opacity = '0';
+      }, 50); // Small delay to ensure the browser registers the class addition before opacity change
+
+      setTimeout(() => {
+          // 6. Reset overlay for the next transition
+          themeAnimOverlay.classList.remove('animate-dark', 'animate-light');
+          themeAnimOverlay.style.opacity = '1'; // Reset opacity for the next instant change
+          
+          // Re-enable the button
+          if (themeToggleBtn) themeToggleBtn.disabled = false;
+      }, 450); // Match this to the animation length (400ms fade-out + buffer)
+  }
+
+  // Loader and interactive fade
+  window.onload = function() {
+    // Check initial theme state
+    const initialIsDark = localStorage.getItem('theme') === 'dark';
+    body.classList.toggle('night-mode', initialIsDark);
+    updateIconVisibility(initialIsDark);
+    themeAnimOverlay.style.opacity = '0'; // Ensure overlay is hidden initially
+
+    // Fade out loader
+    setTimeout(() => {
+      const loader = document.getElementById('zentail-loader');
+      if (loader) loader.style.opacity = '0';
+    }, 700);
+    setTimeout(() => {
+      const loader = document.getElementById('zentail-loader');
+      if (loader) loader.style.display = 'none';
+    }, 1200);
+
+    // Fade in sections
+    document.querySelectorAll('.animate-fade').forEach((block, idx) => {
+      setTimeout(()=>block.classList.add('visible'),700+idx*320);
+    });
+    
+    // Initial doodle creation
+    createRandomDoodles(12);
+  };
+  
+  // Theme button listener
+  document.addEventListener('DOMContentLoaded', () => {
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+        themeToggleBtn.onclick = function() {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark);
+        };
+    }
+    
+    // Confetti paw effect button
+    
+  });
+
+ 
+/* Updated Account Roll Script */
+document.addEventListener('DOMContentLoaded', () => {
+    // Account Toggle logic
+    const accountToggle = document.getElementById('accountToggle');
+    const accountRoll = document.querySelector('.account-roll');
+
+    if (accountToggle && accountRoll) {
+        accountToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            accountRoll.classList.toggle('active');
+        });
+    }
+
+    // Close rollup when clicking anywhere else
+    document.addEventListener('click', () => {
+        if (accountRoll) accountRoll.classList.remove('active');
+    });
+
+    // Theme Toggle logic (Fixed ID name)
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark); // Uses your existing setTheme function
+        });
+    }
+});
+  </script>
+
+  <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+</body>
+</html>

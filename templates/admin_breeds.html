@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZenTail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/static/css/styles2.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Nunito:wght@500;700&family=Micro+5&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+<body>
+  <button class="back-btn" type="button" onclick="window.history.back()">
+    <span class="back-icon">←</span>
+    <span class="back-label">Back</span>
+  </button>
+
+
+<section class="admin-breeds-wrapper" >
+   
+  <h1 class="admin-breeds-title">Manage Breeds</h1>
+  
+  <p class="admin-breeds-subtitle">
+    Upload breed images, set purpose and lifespan, and add details.
+  </p>
+
+  <form class="admin-breeds-form" id="addBreedForm" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="name">Breed name</label>
+        <input id="name" name="name" type="text" required>
+      </div>
+
+      <div class="form-field">
+        <label for="species">Species</label>
+        <input id="species" name="species" type="text" required>
+      </div>
+
+      <div class="form-field">
+        <label for="image">Breed image file</label>
+        <input id="image" name="image" type="file" accept="image/*" required>
+        <small>Supported: JPG, PNG, WEBP</small>
+      </div>
+<img id="previewImage"
+    
+     style="width:120px;margin-top:10px;border-radius:12px;">
+
+      <div class="form-field">
+        <label for="purpose">Purpose</label>
+        <input id="purpose" name="purpose" type="text" required>
+      </div>
+
+      <div class="form-field">
+        <label for="lifespan">Life span</label>
+        <input id="lifespan" name="lifespan" type="number"required>
+      </div>
+
+      <div class="form-field full">
+        <label for="about">About the breed</label>
+        <textarea id="about" name="about" rows="4" required></textarea>
+      </div>
+    </div>
+
+    <button type="submit" class="admin-breeds-submit">Add Breed</button>
+  </form>
+
+ <!-- ===== BREEDS LIST HEADER ===== -->
+<div class="breed-list-header">
+    <span>ID</span>
+    <span>Breed</span>
+    <span>Species</span>
+    <span>Lifespan</span>
+    <span>Purpose</span>
+    <span>Action</span>
+</div>
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toast-container"></div>
+
+<!-- ===== BREEDS LIST BODY ===== -->
+<div id="breed-list-body" class="breed-list"></div>
+
+<!-- ===== EMPTY STATE ===== -->
+<div class="empty-state" id="breed-empty-state" style="display:none;">
+    No breeds found. Add one above!
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    setupForm();
+    fetchBreedsForManagement();
+});
+
+
+/* ---------- FORM ---------- */
+function setupForm() {
+    const fileInput = document.getElementById('image');
+    const previewImg = document.getElementById('previewImage');
+
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = e => previewImg.src = e.target.result;
+        reader.readAsDataURL(file);
+    });
+
+    document
+        .getElementById('addBreedForm')
+        .addEventListener('submit', addBreed);
+}
+
+
+/* ---------- ADD BREED ---------- */
+async function addBreed(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form); // ✅ includes image + text
+
+    // Optional frontend validation
+    if (!formData.get('name').trim()) {
+        showPopup({
+            title: 'Missing Name',
+            message: 'Please enter a breed name',
+            type: 'warning'
+        });
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/breeds', {
+    method: 'POST',
+    body: formData
+});
+
+if (!res.ok) {
+    throw new Error('Server responded with error');
+}
+
+const result = await res.json();
+
+
+        // assume backend returns the created breed object
+prependBreedRow(result);
+
+showPopup({
+    title: 'Breed Added ',
+    message: 'The breed has been added successfully.',
+    type: 'success'
+});
+
+
+        showPopup({
+            title: 'Breed Added ',
+            message: 'The breed has been added successfully.',
+            type: 'success'
+        });
+
+        form.reset();
+        document.getElementById('previewImage').src =
+            '/static/images/breeds/placeholder.png';
+
+    } catch (err) {
+        showPopup({
+            title: 'Server Error',
+            message: 'Please try again later',
+            type: 'error'
+        });
+    }
+}
+
+
+function prependBreedRow(breed) {
+    const list = document.getElementById('breed-list-body');
+
+    const row = document.createElement('div');
+    row.className = 'breed-row adding'; // 👈 animation trigger
+
+    row.innerHTML = `
+        <span class="bid">#</span>
+        <span class="bname">${breed.name}</span>
+        <span>${breed.species || 'N/A'}</span>
+        <span>${breed.lifespan || 'N/A'}</span>
+        <span>${breed.purpose || 'N/A'}</span>
+        <span>
+            <button class="delete-btn" onclick="deleteBreed('${breed._id}')">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </span>
+    `;
+
+    list.prepend(row);
+
+    // remove animation class after play (important)
+    setTimeout(() => row.classList.remove('adding'), 500);
+}
+
+
+/* ---------- DELETE ---------- */
+async function deleteBreed(id) {
+    const row = document.querySelector(
+        `.delete-btn[onclick*="${id}"]`
+    )?.closest('.breed-row');
+
+    if (!row) return;
+
+    row.classList.add('removing');
+
+    try {
+        const res = await fetch(`/api/breeds/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!res.ok) throw new Error();
+
+        const result = await res.json();
+
+        if (result.success) {
+            setTimeout(() => row.remove(), 450);
+
+            showPopup({
+                title: 'Deleted',
+                message: 'Breed removed successfully',
+                type: 'warning'
+            });
+        }
+    } catch {
+        row.classList.remove('removing');
+        showPopup({
+            title: 'Error',
+            message: 'Server error while deleting',
+            type: 'error'
+        });
+    }
+}
+
+
+
+/* ---------- FETCH & DISPLAY BREEDS ---------- */
+async function fetchBreedsForManagement() {
+    const listBody = document.getElementById('breed-list-body');
+    const emptyState = document.getElementById('breed-empty-state');
+
+    listBody.innerHTML = '';
+    emptyState.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/breeds');
+        const breeds = await response.json();
+
+        if (!breeds.length) {
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        breeds.forEach((breed, index) => {
+            const row = document.createElement('div');
+            row.className = 'breed-row';
+
+            row.innerHTML = `
+                <span class="bid">${index + 1}</span> <!-- ID -->                
+                <span class="bname">${breed.name}</span>
+                <span>${breed.species || 'N/A'}</span>
+                <span>${breed.lifespan || 'N/A'}</span>
+                <span>${breed.purpose || 'N/A'}</span>
+                <span>
+                    <button class="delete-btn" onclick="deleteBreed('${breed._id}')">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </span>
+            `;
+
+            listBody.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error('Error fetching breeds:', err);
+        listBody.innerHTML = '<p style="color:red;">Failed to load breeds</p>';
+    }
+}
+
+
+
+/* ===== TOAST FUNCTION ===== */
+function showToast(message, type = 'success', duration = 2800) {
+    const container = document.getElementById('toast-container');
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const iconMap = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation'
+    };
+
+    toast.innerHTML = `
+        <i class="fa-solid ${iconMap[type]}"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 400);
+    }, duration);
+}
+
+function showPopup({ title, message, type = 'success' }) {
+    const overlay = document.getElementById('popup-overlay');
+    const popup = overlay.querySelector('.popup');
+    const icon = popup.querySelector('.popup-icon');
+    const titleEl = document.getElementById('popup-title');
+    const msgEl = document.getElementById('popup-message');
+
+    popup.className = `popup ${type}`;
+
+    const icons = {
+        success: 'fa-circle-check',
+        error: 'fa-circle-xmark',
+        warning: 'fa-triangle-exclamation'
+    };
+
+    icon.innerHTML = `<i class="fa-solid ${icons[type]}"></i>`;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+
+    overlay.classList.remove('hidden');
+
+    document.getElementById('popup-btn').onclick = () => {
+        overlay.classList.add('hidden');
+    };
+}
+
+</script>
+<!-- ===== POPUP MODAL ===== -->
+<div id="popup-overlay" class="popup-overlay hidden">
+    <div class="popup">
+        <div class="popup-icon"></div>
+        <h3 id="popup-title"></h3>
+        <p id="popup-message"></p>
+        <button id="popup-btn">OK</button>
+    </div>
+</div>
+<script>
+  // Apply saved theme when page loads
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("night-mode");
+  }
+</script>
+<style>
+    /* Breed Admin Dark Mode */
+body.night-mode .admin-breeds-wrapper {
+  background: var(--baddie-card);
+  color: var(--baddie-text);
+}
+
+body.night-mode .admin-breeds-form {
+  background: rgba(40, 40, 60, 0.6);
+  padding: 25px;
+  border-radius: 20px;
+}
+
+body.night-mode .form-field input,
+body.night-mode .form-field textarea {
+  background: rgba(255,255,255,0.1);
+  color: var(--baddie-text);
+  border: 1px solid #555;
+}
+
+body.night-mode .breed-row {
+  background: rgba(255,255,255,0.08);
+}
+
+</style>
+</body>
+</html>

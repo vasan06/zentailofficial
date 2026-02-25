@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentail Sign Up - Join the Pack!</title>
+   <link rel="stylesheet" href="./static/css/styles.css">
+   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    </head>
+<body>
+    <div class="dog-cursor-layer"></div>
+
+    <div class="background-container">
+        <div class="gradient-overlay"></div>
+        <ul class="pet-bubbles">
+            <li>🐾</li><li>🦴</li><li>🐈</li><li>🐕</li><li>🐾</li><li>🦴</li><li>🐈</li><li>🐕</li>
+            <li>🐾</li><li>🦴</li><li>🐈</li><li>🐕</li><li>🐾</li><li>🦴</li>
+        </ul>
+    </div>
+<div class="auth-page-center">
+  <div class="login-wrapper">
+    <div class="login-wrapper">
+        <div id="signup-card" class="glassmorphism-card"><br><br><br>
+            <h1 class="logo-text"style="color: white;">Sign Up</h1>
+            <p class="tagline"style="color: white;">Start your Zentail journey today!</p>
+
+            <form id="signup-form">
+                <div class="input-group">
+                    <label for="name"style="color: white;">Pet Parent Name</label>
+                    <input type="text" id="name" placeholder="Your Name" required style="color: white;">
+                </div>
+                <div class="input-group">
+                    <label for="email"style="color: white;">Email</label>
+                    <input type="email" id="email" placeholder="Fido@example.com" requiredstyle="color: white;"style="color: white;">
+                </div>
+                <div class="input-group">
+                    <label for="password"style="color: white;">Choose Password</label>
+                    <input type="password" id="password" placeholder="••••••••" style="color: white;" required>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    Register & Unleash Fun <span class="arrow-icon">→</span>
+                </button>
+            </form>
+
+            <p id="message-area" class="error-msg"></p>
+<br>
+            <div class="divider"style="color: white;">OR</div>
+
+            <p class="footer-text"style="color: white;">
+                Already part of the pack? 
+                <a href="{{ url_for('login_page') }}">Go to Login</a>
+            </p>
+        </div>
+    </div>
+  </div>
+</div>
+<script>
+const dogLayer = document.querySelector('.dog-cursor-layer');
+if (dogLayer) {
+  window.addEventListener('mousemove', (e) => {
+    const x = e.clientX;
+    const y = e.clientY;
+    const easedX = x + (window.innerWidth  / 40);
+    const easedY = y + (window.innerHeight / 40);
+    dogLayer.style.transform = `translate(${easedX - 60}px, ${easedY - 60}px)`; 
+  });
+}
+
+
+
+    // 1. YOUR FIREBASE CONFIGURATION (Replace with your actual keys!)
+  const firebaseConfig = {
+    apiKey: "AIzaSyBzihO1Jx5vZZlkklkTzwJD80gWPxZ73OQ",
+    authDomain: "zentail-eb480.firebaseapp.com",
+    projectId: "zentail-eb480",
+    storageBucket: "zentail-eb480.firebasestorage.app",
+    messagingSenderId: "531711967970",
+    appId: "1:531711967970:web:2c730083ccb4fc711154bb",
+    measurementId: "G-7L522BSXP2"
+  };
+    // 2. Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(); // Get the authentication service
+
+    const signupForm = document.getElementById('signup-form');
+    const messageArea = document.getElementById('message-area');
+
+    function displayMessage(message, type) {
+        messageArea.textContent = message;
+        messageArea.style.color = (type === 'success' ? '#4CAF50' : '#FF5252');
+        messageArea.style.background = (type === 'success' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 82, 82, 0.2)');
+        messageArea.style.padding = '10px';
+    }
+
+    signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        displayMessage('Registering...', 'info');
+
+        try {
+            // STEP A: CREATE USER IN FIREBASE (This is what wasn't working before)
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            console.log("Firebase registration successful for UID:", user.uid);
+            
+            // STEP B: CALL YOUR FLASK API TO STORE NAME/OTHER DATA IN MONGODB
+            const flaskResponse = await fetch('/api/user/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                // Note: We send the name, email, and password to Flask, 
+                // but the Flask API ONLY uses the email/password to store the hashed password in MongoDB, 
+                // and the name is stored in plain text.
+                body: JSON.stringify({ name: name, email: email, password: password })
+            });
+
+            const data = await flaskResponse.json();
+
+            if (flaskResponse.ok) {
+                displayMessage(data.message, 'success');
+                // Redirect after successful registration
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('login_page') }}";
+                }, 2000);
+            } else {
+                // Flask API error (e.g., email already exists in MongoDB)
+                displayMessage(`MongoDB Error: ${data.error}`, 'error');
+                // You might need to delete the user from Firebase here if the MongoDB insert failed
+            }
+
+        } catch (error) {
+            // Firebase Error (e.g., auth/weak-password, auth/invalid-email)
+            let errorMessage = error.message.replace('Firebase: Error (auth/', '').replace(/\)/g, '').replace(/-/g, ' ');
+            displayMessage(`Firebase Error: ${errorMessage}`, 'error');
+            console.error(error);
+        }
+    });
+</script>
+
+<!-- DOG MASCOT -->
+<div id="dog" class="idle">
+  <div class="dog-head">
+    <div class="ear left"></div>
+    <div class="ear right"></div>
+
+    <div class="face">
+      <div class="eye left"><div class="pupil"></div></div>
+      <div class="eye right"><div class="pupil"></div></div>
+
+      <div class="muzzle">
+        <div class="nose"></div>
+        <div class="mouth"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dog-body">
+    <div class="leg front left"></div>
+    <div class="leg front right"></div>
+    <div class="leg back left"></div>
+    <div class="leg back right"></div>
+    <div class="tail"></div>
+  </div>
+</div>
+
+
+<script>
+const dogEl = document.getElementById('dog');
+if (dogEl) {
+  const pupils = dogEl.querySelectorAll('.pupil');
+  window.addEventListener('mousemove', (e) => {
+    const rect = dogEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const angle = Math.atan2(dy, dx);
+    const r = 3;
+    const px = Math.cos(angle) * r;
+    const py = Math.sin(angle) * r;
+    pupils.forEach(p => {
+      p.style.transform = `translate(${px}px, ${py}px)`;
+    });
+  });
+}
+
+  (function() {
+    const dog = document.getElementById('dog');
+    if (!dog) return;
+
+    const ears = dog.querySelectorAll('.ear');
+    const eyes = dog.querySelectorAll('.eye');
+    const pupils = dog.querySelectorAll('.pupil');
+    const passwordInput = document.getElementById('password');
+
+    /* 1) Eyes follow mouse slightly */
+    window.addEventListener('mousemove', (e) => {
+      const rect = dog.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const angle = Math.atan2(dy, dx);
+      const r = 4;
+
+      const px = Math.cos(angle) * r;
+      const py = Math.sin(angle) * r;
+
+      pupils.forEach(p => {
+        p.style.transform = `translate(${px}px, ${py}px)`;
+      });
+    });
+
+    /* 2) Click ears -> little reaction */
+    ears.forEach(ear => {
+      ear.addEventListener('click', (e) => {
+        e.stopPropagation();
+        ear.classList.add('ear-clicked');
+        setTimeout(() => ear.classList.remove('ear-clicked'), 350);
+      });
+    });
+
+    /* 3) While typing password, cover eyes with ears */
+    if (passwordInput) {
+      passwordInput.addEventListener('focus', () => {
+        dog.classList.add('dog-hide-eyes');
+      });
+      passwordInput.addEventListener('blur', () => {
+        dog.classList.remove('dog-hide-eyes');
+      });
+      passwordInput.addEventListener('input', () => {
+        dog.classList.add('dog-hide-eyes');
+      });
+    }
+  })();
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zentail Premium Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Nunito:wght@600;800&family=Micro+5&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --accent: #a855f7;
+            --bg-light: #f8fafc;
+            --card-light: rgba(255, 255, 255, 0.7);
+            --text-main: #1e293b;
+            --urgent-red: #ef4444;
+            /* Night Mode Vars */
+            --bg-dark: #0f172a;
+            --card-dark: rgba(30, 41, 59, 0.7);
+            --text-dark: #f1f5f9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        body.night-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* --- Header & Nav --- */
+        .zentail-header {
+            padding: 20px 5%;
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.night-mode .zentail-header { background: #1e293b; }
+
+        .zentail-logo-group { display: flex; align-items: center; gap: 15px; }
+        .zentail-title { font-family: 'Micro 5'; font-size: 2.5rem; letter-spacing: 2px; }
+
+        nav { background: #fff; padding: 10px 5%; border-bottom: 1px solid #e2e8f0; }
+        body.night-mode nav { background: #1e293b; border-color: #334155; }
+        nav ul { list-style: none; display: flex; gap: 30px; }
+        nav a { text-decoration: none; color: inherit; font-weight: 600; opacity: 0.7; transition: 0.3s; }
+        nav a.active, nav a:hover { opacity: 1; color: var(--primary); }
+
+        /* --- Main Layout --- */
+        .admin-main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        .dashboard-header { margin-bottom: 40px; }
+        .dashboard-header h1 { font-size: 2.2rem; margin-bottom: 5px; }
+        .dashboard-header p { opacity: 0.6; }
+
+        /* --- 10/10 Glass Stat Cards --- */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .glass-stat-card {
+            background: var(--card-light);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 30px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease;
+        }
+        body.night-mode .glass-stat-card { 
+            background: var(--card-dark); 
+            border-color: rgba(255,255,255,0.05); 
+        }
+
+        .glass-stat-card:hover { transform: translateY(-8px); }
+
+        .card-icon {
+            width: 55px; height: 55px;
+            background: var(--primary);
+            color: white;
+            border-radius: 16px;
+            display: grid; place-items: center; font-size: 22px;
+        }
+
+        .card-info span { display: block; font-size: 0.9rem; opacity: 0.7; margin-bottom: 4px; }
+        .card-info strong { font-size: 1.8rem; font-weight: 800; }
+
+        /* --- Analytics Section --- */
+        .analytics-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .analytics-card {
+            background: var(--card-light);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        body.night-mode .analytics-card { background: var(--card-dark); }
+
+        .analytics-card h3 { margin-bottom: 20px; font-size: 1.2rem; display: flex; gap: 10px; }
+
+        .traffic-list, .event-feed { display: flex; flex-direction: column; gap: 15px; }
+        .traffic-item, .event-item {
+            display: flex; justify-content: space-between;
+            padding: 15px; background: rgba(0,0,0,0.03); border-radius: 12px;
+        }
+        body.night-mode .traffic-item { background: rgba(255,255,255,0.03); }
+
+        /* --- Special Effects --- */
+        .blink-urgent { color: var(--urgent-red); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .mode-toggle { 
+            cursor: pointer; padding: 8px 15px; border-radius: 20px; 
+            border: 1px solid #ddd; background: #eee;
+        }
+
+        /* --- Footer (Your Content Integrated) --- */
+        footer {
+            background: white;
+            margin-top: 100px;
+            padding: 60px 5% 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        body.night-mode footer { background: #161b2e; border-color: #2d3748; }
+
+        .footer-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            padding-bottom: 40px;
+        }
+
+        .footer-logo-big { font-family: 'Micro 5'; font-size: 4.5rem; color: var(--text-main); }
+        body.night-mode .footer-logo-big { color: white; }
+
+        .contact-title { font-weight: 700; font-size: 1.1rem; color: var(--primary); display: block; margin-bottom: 10px; }
+        .footer-right p { line-height: 1.6; opacity: 0.8; font-size: 0.95rem; }
+
+        .social-icons { display: flex; gap: 15px; margin-top: 15px; }
+        .social-icons img { 
+            transition: 0.3s; 
+            filter: grayscale(1);
+            border-radius: 8px;
+        }
+        .social-icons img:hover { transform: scale(1.15); filter: grayscale(0); }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+        .footer-bottom a { color: var(--primary); text-decoration: none; margin: 0 10px; }
+
+        /* --- Animations --- */
+        .blink-urgent { color: var(--urgent-red); animation: blink 1.5s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        .mode-toggle { 
+            background: var(--primary); color: white; border: none; 
+            padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<header class="zentail-header">
+    <div class="zentail-logo-group">
+        <span class="zentail-title">ZENTAIL</span>
+    </div>
+   <button class="mode-toggle" id="modeToggleBtn">
+  <i class="fa-solid fa-moon"></i> Toggle Theme
+</button>
+
+</header>
+
+<nav>
+    <ul>
+        <li><a class="active" href="#">Dashboard</a></li>
+        <li><a href="/admin/breeds">Breeds</a></li>
+        <li><a href="/add-product">Products</a></li>
+        <li><a href="/admin/bookings">Bookings</a></li>
+    </ul>
+</nav>
+
+<main class="admin-main">
+    <div class="dashboard-header">
+        <h1>Admin Dashboard</h1>
+        <p></p>
+    </div>
+
+    <div class="stats-container">
+        <div class="glass-stat-card">
+            <div class="card-icon"><i class="fa-solid fa-box"></i></div>
+            <div class="card-info">
+                <span >Products</span>
+                <strong id="products">0</strong>
+            </div>
+        </div>
+        <div class="glass-stat-card">
+            <div class="card-icon"><i class="fa-solid fa-paw"></i></div>
+            <div class="card-info">
+                <span>Total Species</span>
+                <strong id="breeds">0</strong>
+            </div>
+        </div>
+        <div class="glass-stat-card">
+            <div class="card-icon"><i class="fa-solid fa-calendar"></i></div>
+            <div class="card-info">
+                <span>Total Bookings</span>
+                <strong id="total_bookings">0</strong>
+            </div>
+        </div>
+        <div class="glass-stat-card">
+            <div class="card-icon" style="background: var(--urgent-red);"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="card-info">
+                <span>Urgent</span>
+                <strong id="emergency_count">0</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-row">
+        <div class="analytics-card">
+            <h3><i class="fa-solid fa-chart-line"></i> User Traffic</h3>
+            <div class="traffic-list">
+                <div class="traffic-item"><span>Daily</span> <b id="visit_daily">0</b></div>
+                <div class="traffic-item"><span>Monthly</span> <b id="visit_monthly">0</b></div>
+                <div class="traffic-item"><span>Yearly</span> <b id="visit_yearly">0</b></div>
+            </div>
+        </div>
+
+        <div class="analytics-card">
+            <h3><i class="fa-solid fa-bolt"></i> Popular Interactions</h3>
+            <div id="click_events_list" class="event-feed">
+                <p>Loading live interactions...</p>
+            </div>
+        </div>
+    </div>
+</main>
+<footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        <div class="footer-logo-big">ZENTAIL</div>
+      </div>
+
+      <div class="footer-right">
+        <span class="contact-title">Contact us</span>
+        <p>Email: zentailofficials@gmail.com<br>
+           Phone: +91 830 00 22 991
+        </p><br>
+        
+        <div class="touch-in">
+          <span class="contact-title">Touch in</span>
+          <div class="social-icons">
+            <a href="#"><img height="35px" width="35px" src="../static/images/instagram.svg" alt="Instagram" onerror="this.onerror=null;this.src='https://placehold.co/35x35/E4405F/ffffff?text=IG'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/facebook.svg" alt="Facebook" onerror="this.onerror=null;this.src='https://placehold.co/35x35/1877F2/ffffff?text=FB'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/whatsapp.svg" alt="WhatsApp" onerror="this.onerror=null;this.src='https://placehold.co/35x35/25D366/ffffff?text=WA'"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>Copyrights 2025. All Rights reserved <br><br>
+      <a href="#">Privacy</a> | <a href="#">Terms</a></span>
+    </div>
+</footer>
+
+<script>
+  const toggleBtn = document.querySelector(".mode-toggle");
+
+  // Load saved theme on page load
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("night-mode");
+  }
+
+  toggleBtn.addEventListener("click", function () {
+    document.body.classList.toggle("night-mode");
+
+    // Save theme preference
+    if (document.body.classList.contains("night-mode")) {
+      localStorage.setItem("theme", "dark");
+    } else {
+      localStorage.setItem("theme", "light");
+    }
+  });
+  
+  // // 1. Night Mode Toggle
+    // const modeBtn = document.getElementById('modeToggleBtn');
+    // modeBtn.addEventListener('click', () => {
+    //     document.body.classList.toggle('night-mode');
+    // });
+
+    // 2. FETCH DATA FROM BACKEND
+    function updateStats() {
+  fetch("/admin/stats")
+    .then(res => {
+      if (!res.ok) throw new Error("HTTP error " + res.status);
+      return res.json();
+    })
+    .then(data => {
+      // 1. Basic Stats
+      document.getElementById("products").innerText = data.products ?? 0;
+      document.getElementById("breeds").innerText = data.breeds ?? 0;
+      document.getElementById("total_bookings").innerText = data.total_bookings ?? 0;
+      
+      // 2. Emergency Count & Blinking
+      const emCount = document.getElementById("emergency_count");
+      const countValue = data.emergency_count ?? 0;
+      emCount.innerText = countValue;
+      
+      if (countValue > 0) {
+          emCount.classList.add("blink-urgent"); // Matches the CSS animation name
+      } else {
+          emCount.classList.remove("blink-urgent");
+      }
+
+      // 3. Traffic Stats
+      document.getElementById("visit_daily").innerText = data.visit_daily ?? 0;
+      document.getElementById("visit_monthly").innerText = data.visit_monthly ?? 0;
+      document.getElementById("visit_yearly").innerText = data.visit_yearly ?? 0;
+
+      // 4. Interaction Feed (Event List)
+      const eventList = document.getElementById("click_events_list");
+      if (data.top_events && data.top_events.length > 0) {
+          eventList.innerHTML = data.top_events.map(ev => 
+            `<div class="traffic-item">
+                <span>${ev.label}</span>
+                <b>${ev.count} clicks</b>
+             </div>`
+          ).join('');
+      } else {
+          eventList.innerHTML = '<p class="empty-msg">No recent activity detected.</p>';
+      }
+    })
+    .catch(err => {
+      console.error("Dashboard Sync Failed:", err);
+    });
+}
+
+// Initial call
+updateStats();
+// Auto-refresh every 20 seconds
+setInterval(updateStats, 20000);
+</script>
+
+</body>
+</html>

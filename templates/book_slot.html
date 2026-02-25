@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZenTail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./static/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Nunito:wght@500;700&family=Micro+5&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+ 
+</head>
+<body>
+
+  
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="popup {{ category }}">
+        <span>{{ message }}</span>
+        <button onclick="closePopup(this)">×</button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
+  <!-- Full-screen animation overlay -->
+  <header class="zentail-header">
+    <div class="zentail-header-top">
+        <div class="header-section section-left">
+            <span class="zentail-title">ZENTAIL</span>
+        </div>
+
+        <div class="header-section section-center">
+            <div class="zentail-logo">
+                <img src="../static/images/combain.png" alt="ZenTail Logo" onerror="this.onerror=null;this.src='https://placehold.co/120x120/f9f9f9/bb6a7f?text=PET'">
+            </div>
+        </div>
+        
+        <div class="header-section section-right">
+            <div class="zentail-account-theme">
+                
+
+                <div class="roll-btn account-roll">
+                    <a href="{{ url_for('logout') }}" class="slide-btn logout-btn" id="logoutBtn">
+                        <span>Logout</span>
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                    
+                    <button class="icon-btn account-btn" id="accountToggle">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+                </div>
+                <button class="icon-btn theme-btn" id="themeToggle">
+                    <i class="fa-solid fa-sun" id="theme-light-icon"></i>
+                    <i class="fa-solid fa-moon" id="theme-dark-icon" style="display:none;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <style>
+  .account-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.account-popup-card {
+    background: #fff;
+    padding: 24px 30px;
+    border-radius: 18px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+}
+.account-popup-card h3 {
+    margin-bottom: 16px;
+}
+.account-popup-card p {
+    margin: 8px 0;
+}
+.account-popup-card button {
+    margin-top: 16px;
+    padding: 8px 20px;
+    border-radius: 12px;
+    border: none;
+    background: #bb8cf7;
+    color: #fff;
+    cursor: pointer;
+}
+
+</style>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('home') }}" >HOME</a></li>
+            <li><a href="{{ url_for('products') }}">PRODUCTS</a></li>
+            <li><a href="{{ url_for('breeds') }}">BREEDS</a></li>
+            <li><a href="{{ url_for('vet_locator') }}">VET LOCATOR</a></li>
+            <li><a href="{{ url_for('book_slot') }}" class="active">BOOK SLOT</a></li>
+            <li><a href="{{ url_for('about') }}">ABOUT US</a></li>
+        </ul>
+    </nav>
+</header>
+
+
+  <section class="vet-appt-section">
+  <h2 class="vet-appt-title">Book a Vet Appointment</h2>
+  <p class="vet-appt-subtitle">
+    Tell us about your pet and when you’d like to visit. The clinic will confirm your slot.
+  </p>
+
+  <form action="{{ url_for('book_slot') }}" method="POST" class="vet-appt-form">
+    <!-- Owner details -->
+    <div class="vet-appt-field">
+      <label for="owner_name">Owner Name<span>*</span></label>
+      <input id="owner_name" type="text" name="owner_name" required>
+    </div>
+
+    <div class="vet-appt-field">
+      <label for="phone">Phone Number<span>*</span></label>
+      <input id="phone" type="number" name="phone" required>
+    </div>
+
+    <div class="vet-appt-field">
+      <label for="email">Email</label>
+      <input id="email" type="email" name="email">
+    </div>
+
+    <!-- Pet details -->
+    <div class="vet-appt-field">
+      <label for="pet_name">Pet Name<span>*</span></label>
+      <input id="pet_name" type="text" name="pet_name" required>
+    </div>
+
+    <div class="vet-appt-field">
+      <label for="pet_type">Pet Type<span>*</span></label>
+      <select id="pet_type" name="pet_type" required>
+        <option value="">Select pet</option>
+        <option>Dog</option>
+        <option>Cat</option>
+        <option>Bird</option>
+        <option>Rabbit</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="vet-appt-field">
+      <label for="breed">Breed (optional)</label>
+      <input id="breed" type="text" name="breed">
+    </div>
+
+
+
+    <!-- Clinic + time -->
+ <div class="vet-appt-field vet-appt-field-full">
+  <label for="clinic_name">Preferred Clinic<span>*</span></label>
+  <div class="clinic-autocomplete">
+    <input id="clinic_name" name="clinic_name" type="text"
+           placeholder="Start typing clinic or area...">
+    <div class="clinic-suggestions" id="clinic-suggestions"></div>
+  </div>
+</div>
+
+<div class="vet-appt-row">
+
+  <!-- DATE (LEFT HALF) -->
+  <div class="vet-appt-field">
+    <label for="date">Preferred Date<span>*</span></label>
+    <input
+      id="date"
+      type="date"
+      name="date"
+      required
+      class="appt-date"
+    >
+  </div>
+</div>
+
+  <!-- TIME (RIGHT HALF) -->
+<div class="vet-appt-field">
+  <label for="hour">Preferred Time <span>*</span></label>
+  <div class="time-group">
+    <!-- Hour (1–12) -->
+    <select id="hour" class="appt-time" required>
+      <option value="" disabled selected>HH</option>
+      <option value="1">01</option>
+      <option value="2">02</option>
+      <option value="3">03</option>
+      <option value="4">04</option>
+      <option value="5">05</option>
+      <option value="6">06</option>
+      <option value="7">07</option>
+      <option value="8">08</option>
+      <option value="9">09</option>
+      <option value="10">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+    </select>
+
+    <!-- Minute (00–55 step 5; change as you like) -->
+    <select id="minute" class="appt-time" required>
+      <option value="" disabled selected>MM</option>
+      <option value="00">00</option>
+      <option value="05">05</option>
+      <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
+      <option value="25">25</option>
+      <option value="30">30</option>
+      <option value="35">35</option>
+      <option value="40">40</option>
+      <option value="45">45</option>
+      <option value="50">50</option>
+      <option value="55">55</option>
+    </select>
+
+    <!-- AM / PM -->
+    <select id="meridiem" name="meridiem" class="appt-ampm" required>
+      <option value="AM">AM</option>
+      <option value="PM">PM</option>
+    </select>
+  </div>
+
+  <!-- Hidden field actually sent to Flask as `time` -->
+  <input type="hidden" id="time" name="time" />
+</div>
+
+
+
+
+    <!-- Reason -->
+    <div class="vet-appt-field vet-appt-field-full">
+      <label for="reason">Reason for visit<span>*</span></label>
+      <textarea id="reason" name="reason" rows="3" required
+        placeholder="Vaccination, checkup, surgery follow-up, injury, etc."></textarea>
+    </div>
+
+    <div class="vet-appt-actions">
+      <button type="submit" class="vet-appt-submit">
+        🐾 Book Appointment
+      </button>
+    </div>
+  </form>
+</section>
+
+<!-- Success popup -->
+<div class="vet-appt-popup" id="vet-appt-popup">
+  <div class="vet-appt-popup-card">
+    <div class="vet-appt-paw">🐾</div>
+    <h3>Appointment Request Sent!</h3>
+    <p>
+      Your booking has been received. The clinic will confirm your slot shortly.
+    </p>
+    <button type="button" class="vet-appt-popup-close" id="vet-appt-popup-close">
+      Okay, got it
+    </button>
+  </div>
+</div>
+
+<script>
+// 1. DATA AND CONFIG
+userEmail = "{{ session['user']['email'] if session.get('user') else '' }}";
+
+
+// 2. LOADER LOGIC (Reliable Removal)
+function hideLoader() {
+    const loader = document.getElementById('zentail-loader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.display = 'none'; }, 500);
+    }
+}
+
+// 3. APPOINTMENT FETCHING & RENDERING
+function fetchMyAppointments() {
+  const container = document.getElementById("appointments-list-container");
+  if (!userEmail) {
+    if(container) container.innerHTML = "<p>Please <a href='/'>login</a> to view your appointments.</p>";
+    return;
+  }
+
+  fetch(`/api/my-appointments/${userEmail}`)
+    .then(res => res.json())
+    .then(data => renderAppointments(data))
+    .catch(err => {
+      console.error("Fetch error:", err);
+      if(container) container.innerHTML = "<p>Unable to load appointments at this time.</p>";
+    });
+}
+
+function renderAppointments(appointments) {
+  const container = document.getElementById("appointments-list-container");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (!appointments || appointments.length === 0) {
+    container.innerHTML = "<p>No appointments found for this account.</p>";
+    return;
+  }
+
+  appointments.forEach(appt => {
+    const card = document.createElement("div");
+    card.className = `appointment-card ${appt.status.toLowerCase()}`;
+    card.innerHTML = `
+      <div class="appointment-row">
+        <span class="appointment-label">Pet:</span> <span>${appt.pet_name}</span>
+      </div>
+      <div class="appointment-row">
+        <span class="appointment-label">Clinic:</span> <span>${appt.clinic_name}</span>
+      </div>
+      <div class="appointment-row">
+        <span class="appointment-label">Date & Time:</span> <span>${appt.date} • ${appt.time}</span>
+      </div>
+      <div class="appointment-row">
+        <span class="appointment-label">Status:</span> 
+        <span class="appointment-status status-${appt.status.toLowerCase()}">${appt.status}</span>
+      </div>
+      ${appt.cancel_reason ? `<div class="cancel-reason"><strong>Reason:</strong> ${appt.cancel_reason}</div>` : ""}
+    `;
+    container.appendChild(card);
+  });
+}
+
+// 4. INITIALIZATION
+document.addEventListener('DOMContentLoaded', () => {
+    // Hide loader after a short delay
+    setTimeout(hideLoader, 800);
+
+    // Load Appointments
+    fetchMyAppointments();
+
+    // Fetch live locations for autocomplete
+    fetch("/api/locations")
+      .then(res => res.json())
+      .then(data => { if(data.length) clinics = data.map(c => `${c.name}, ${c.address}`); })
+      .catch(e => console.log("Using backup clinic list"));
+
+    // Handle Form Time Formatting
+    const form = document.querySelector(".vet-appt-form");
+    if(form) {
+        form.addEventListener("submit", function() {
+            const h = document.getElementById("hour").value;
+            const m = document.getElementById("minute").value;
+            const ampm = document.getElementById("meridiem").value;
+            document.getElementById("time").value = `${h}:${m} ${ampm}`;
+        });
+    }
+});
+
+// Close popup logic
+popup = document.getElementById('vet-appt-popup');
+if(popup) {
+    document.getElementById('vet-appt-popup-close').onclick = () => popup.style.display = 'none';
+}
+</script>
+
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        <div class="footer-logo">ZENTAIL</div>
+        <div class="quick-links">
+            <span class="quick-links-title">Quick Links</span>
+            <div class="quick-links-columns">
+                <div>
+                    <a href="{{ url_for('products') }}">Products</a>
+                    <a href="{{ url_for('vet_locator') }}">Vet Locator</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('breeds') }}">Breeds</a>
+                    <a href="{{ url_for('about') }}">About Us</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('book_slot') }}">Book Slots</a>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="vet-appt-popup" id="vet-appt-popup">
+  <div class="vet-appt-popup-card">
+    <div class="vet-appt-paw">🐾</div>
+    <h3>Booking Request Sent!</h3>
+    <p style="margin: 15px 0; line-height: 1.5;">
+      Your bookings are sent to the admins. 
+      <strong>Note:</strong> This block is currently under construction, so you won't see a live status update here yet. 
+      You can verify via call, or our team will call you for booking confirmation.
+    </p>
+    <button type="button" class="vet-appt-popup-close" id="vet-appt-popup-close">
+      Okay, I Understand
+    </button>
+  </div>
+</div>
+
+      <div class="footer-right">
+        <span class="contact-title">Contact us</span>
+        <p>Email: zentailofficials@gmail.com<br>
+           Phone: +91 830 00 22 991
+        </p>
+        <div class="touch-in">
+          <span class="contact-title">Touch in</span><br>
+          <div class="social-icons"><br>
+            <!-- Placeholder image URLs for social icons -->
+            <a href="#"><img height="35px" width="35px" src="../static/images/instagram.svg" alt="Instagram" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=IG'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/facebook.svg" alt="Facebook" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=FB'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/whatsapp.svg" alt="WhatsApp" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=WA'"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom" >
+      <span>Copyrights 2025. All Rights reserved <br><br><a href="{{ url_for('privacy') }}">Privacy</a> | <a href="{{ url_for('privacy') }}">Terms</a></span>
+    </div>
+  </footer>
+
+ <!-- Chatbot Button -->
+<button class="confetti-btn" title="Celebrate!" style="position:fixed;bottom:16px;right:16px;z-index:13;background:var(--baddie-accent);color:#fff;border:none;border-radius:50%;width:58px;height:58px;box-shadow:0 2px 14px #d3b9f7cc;font-size:1.35em;cursor:pointer;outline:none;display:flex;align-items:center;justify-content:center;">
+  <i class="fa-solid fa-paw"></i>
+</button>
+
+<!-- AI Chatbot Modal -->
+<div id="chatbot-popup" style="display:none;position:fixed;bottom:80px;right:20px;width:320px;height:400px;background:#fff;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);z-index:3000;overflow:hidden;flex-direction:column;">
+  <div style="background:#bb6a7f;color:#fff;padding:10px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">
+    ZenTail AI Assistant
+    <span id="chatbot-close" style="cursor:pointer;">&times;</span>
+  </div>
+  <div id="chatbot-messages" style="flex:1;padding:10px;overflow-y:auto;background:#f9f9f9;"></div>
+  <div style="display:flex;border-top:1px solid #ddd;">
+    <input id="chatbot-input" type="text" placeholder="Ask me anything..." style="flex:1;padding:10px;border:none;outline:none;">
+    <button id="chatbot-send" style="background:#bb6a7f;color:#fff;border:none;padding:10px;cursor:pointer;">Send</button>
+  </div>
+</div>
+
+
+<script>
+
+  //let clinics = [];   // will come from MongoDB
+  const form = document.querySelector('.vet-appt-form');
+  const popup = document.getElementById('vet-appt-popup');
+  const popupClose = document.getElementById('vet-appt-popup-close');
+
+
+
+  popupClose.addEventListener('click', () => {
+    popup.style.display = 'none';
+    form.reset();                  // optional: clear form
+  });
+
+  // close when clicking outside card
+  popup.addEventListener('click', (e) => {
+    if (e.target === popup) {
+      popup.style.display = 'none';
+    }
+  });
+
+fetch("/api/locations")
+  .then(res => res.json())
+  .then(data => {
+    // Convert Mongo objects → display strings
+    clinics = data.map(c => `${c.name}, ${c.address}`);
+  })
+  .catch(err => console.error("Failed to load clinics:", err));
+
+
+
+
+  const clinics = [
+  "Cotton City Pet's Poly Clinic, Alagesan Road, Saibaba Colony",
+  "SKS Veterinary Hospital, Bharathi Park, Saibaba Colony",
+  "Pet Zone Veterinary Clinic, RS Puram",
+  "A To Z Pet Polyclinic, Avinashi Road, Peelamedu",
+  "Veterinary Poly Clinic, Townhall",
+  "Paws Pet Care Clinic, Saravanampatti",
+  "Selva Veterinary Clinic, Peelamedu",
+  "Sanchu Animal Hospital, NTC Murugan Mills",
+  "JP Pet Hospital, RS Puram, Venkata Krishna Rd",
+  "Blue Cross of India CBE, Avinashi Road, Peelamedu",
+  "City Pets Poly Clinic, Saibaba Colony",
+  "RNK Veterinary Clinic, Saibaba Colony",
+  "Animal Kingdom Vet, Gandhipuram",
+  "Vets4Pets Clinic, Saibaba Colony",
+  "SKS Peelamedu Branch, Bharathi Colony Road, Peelamedu",
+  "Pet Speciality Hospitality, RS Puram",
+  "Pets Veterinary Clinic, Pankaja Mill Road, Ramanathapuram",
+  "Happy Paws Centre, Singanallur",
+  "Govt Veterinary Hospital Vilankurichi, Vilankurichi",
+  "Govt Veterinary Hospital Kadampadi, Maathappur Road",
+  "PETS & VETS Clinic, New Thillai Nagar, Vadavalli",
+  "Thiru's Pet Clinic, Thudiyalur",
+  "Ram Poly Clinic, New Scheme Road",
+  "Manohara Pets Clinic, Uppilipalayam",
+  "S V Pet Care, Thadagam Road, Venkitapuram",
+  "Blue Plus Pet Hospital, Coimbatore Central",
+  "JSR Pet Multi Speciality, West Ramalinga Road",
+  "JM Pet Clinic, Veerapandi, Periyanaickenpalayam",
+  "Coimbatore Veterinary College Hospital, Hebron Road, Rampura",
+  "Pet Care Coimbatore, Race Course Road",
+  "Humane Animal Hospital, Cheran Nagar, Selvapuram North",
+  "Sri Vinayaga Pets Clinic, Sowripalayam Road",
+  "Kovai Veterinary Clinic, Sowripalayam Pirivu, Ramanathapuram",
+  "Sukadev Animal Care, Raju Naidu Layout, Gandhipuram",
+  "Copaw Pets Poly Clinic, Thudiyalur / Kurudampalayam",
+  "Tritails Veterinary Hospital, Trichy Road, Ondipudur",
+  "Nova Pet Clinic, Sundarapuram, Kurichi",
+  "Sree Meenakshi Pet Clinic, Koundampalayam",
+  "Kovai Pet Clinic & Surgery, Saibaba Colony Extension",
+  "Royal Pet Clinic, Vadavalli",
+  "ABC Pet Clinic, Saibaba Colony Extension",
+  "Paw & Claw Veterinary Clinic, Nava India, Peelamedu",
+  "Happy Tails Veterinary Clinic, Gandhipuram Cross Cut Road",
+  "Pawsome Pet Clinic, Udayampalayam",
+  "MediPets Veterinary Clinic, Ramanathapuram Main Road",
+  "Blue Feather Pet Clinic, Vadavalli Perur Road",
+  "Hill View Pet Clinic, Perur",
+  "Little Paws Clinic, Poozhithottam, Thudiyalur",
+  "Pets 360 Clinic, Varadharajapuram",
+  "Petz Care Veterinary Station, SIHS Colony",
+  "Prime Pet Clinic, K.K. Pudur",
+  "Cozy Pet Clinic, Koundampalayam",
+  "Vet Point Multi Care, Ukkadam",
+  "Snow Pet Veterinary Clinic, Ondipudur",
+  "Care & Cure Pet Clinic, Singanallur ESIC area",
+  "Happy Paws Veterinary Care, Hope College",
+  "Petz Haven Veterinary Clinic, R.S. Puram West",
+  "Furry Friends Clinic, Vellakinar",
+  "A1 Pet Clinic, Kuniyamuthur",
+  "Pet Zone Care Clinic, Vadakovai",
+  "Green Park Vet Clinic, Tatabad, Gandhipuram",
+  "Shree Pet Clinic, Kavundampalayam Main Road",
+  "VetLine Animal Clinic, Chinniampalayam",
+  "Care4Pets Veterinary Clinic, Ondipudur Main Road",
+  "Angel Pet Clinic, Civil Aerodrome Road",
+  "Sri Krishna Pets Clinic, Cheran Ma Nagar",
+  "Town Pets Clinic, Ukkadam",
+  "Happy Vet Animal Care, Perur Chettipalayam",
+  "Prime Care Veterinary Clinic, Peelamedu Pudur",
+  "SR Pet Health Centre, Karaipudur, Irugur",
+  "Vet & Heal Pet Clinic, Goundampalayam",
+  "4Paws MultiVet Centre, Velandipalayam",
+  "PupCare Veterinary Clinic, Singanallur Near Bus Stand",
+  "VetTrust Pet Clinic, Appanaickenpalayam",
+  "PetsLife Clinic, Nallampalayam",
+  "Dr. Ramu Pet Clinic, Podanur",
+  "Happy Paws Clinic, Trichy Road, Sungam",
+  "Animal Aid Veterinary Clinic, Hopes College",
+  "Vetri Pet Clinic, Perur Main Road",
+  "Faith Animal Clinic, Thudiyalur Extension",
+  "VetCare Animal Hospital, R.S. Puram",
+  "Paws & Claws Veterinary Clinic, Coimbatore Central",
+  "PetCare Plus Clinic, Town Hall",
+  "Dr. Meena Pet Clinic, Gandhipuram",
+  "FurBall Pet Clinic, Saravanampatti",
+  "Happy Tails Vet Hospital, Ramanathapuram",
+  "Pawsitive Care Vet Clinic, Peelamedu",
+  "Coimbatore Pets Clinic, Saibaba Colony",
+  "VetSmart Animal Clinic, Ukkadam",
+  "TailWaggers Veterinary Care, Vadavalli",
+  "VetWorld Animal Clinic, Ramanathapuram Main Road",
+  "Animal Wellness Centre, RS Puram West",
+  "Pawfect Vet Care, Peelamedu Main Road",
+  "Healthy Paws Veterinary Clinic, Race Course Road",
+  "Fur Haven Pet Clinic, Uppilipalayam",
+  "Vet Clinic Plus, Selvapuram",
+  "Companion Pet Clinic, RS Puram",
+  "PetLine Veterinary Hospital, Thadagam Road",
+  "Caring Paws Vet Clinic, Gandhipuram",
+  "Little Paws Vet Care, Rampura",
+  "Royal Paws Veterinary Clinic, RS Puram",
+  "Pawtopia Vet Clinic, Saibaba Colony",
+  "VetCare Plus Animal Hospital, Vilankurichi",
+  "Happy Paws Multi-Speciality Clinic, Singanallur",
+  "Fur & Feather Vet Clinic, Coimbatore Central",
+  "Animal Care Coimbatore, Rampura",
+  "Paws N Claws Veterinary Clinic, Race Course Road",
+  "VetCare Animal Hospital, Veerapandi Periyanaickenpalayam",
+  "Blue Cross Veterinary Hospital, Peelamedu",
+  "Pets World Veterinary Clinic, Peelamedu",
+  "Healthy Tails Vet Clinic, Gandhipuram",
+  "Pawsitive Veterinary Hospital, RS Puram",
+  "Blue Paw Pet Clinic, NTC Murugan Mills",
+  "City Pet Care Clinic, Saibaba Colony",
+  "Manohara Vet Clinic, Uppilipalayam",
+  "VetPoint Pet Clinic, Thadagam Road"
+];
+
+ document.addEventListener('DOMContentLoaded', function () {
+    const clinicInput = document.getElementById('clinic_name');
+    const suggestionsBox = document.getElementById('clinic-suggestions');
+    if (!clinicInput || !suggestionsBox) return;
+
+    function renderSuggestions(list, withViewAll) {
+      if (!list.length) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      let html = list.map(c => `<div class="clinic-item">${c}</div>`).join('');
+
+      if (withViewAll) {
+        html += `<div class="view-all">View all clinics</div>`;
+      }
+
+      suggestionsBox.innerHTML = html;
+      suggestionsBox.style.display = 'block';
+    }
+
+    function showMatches(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        if (!clinics || clinics.length === 0) return;
+const first = clinics.slice(0, 8);
+
+        renderSuggestions(first, true);
+        return;
+      }
+      const matches = clinics
+        .filter(c => c.toLowerCase().includes(q))
+        .slice(0, 8);
+      renderSuggestions(matches, true);
+    }
+
+    clinicInput.addEventListener('input', e => {
+      showMatches(e.target.value);
+    });
+
+    clinicInput.addEventListener('focus', () => {
+      showMatches(clinicInput.value);
+    });
+
+    suggestionsBox.addEventListener('click', e => {
+      const target = e.target;
+
+      if (target.classList.contains('clinic-item')) {
+        clinicInput.value = target.textContent;
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      if (target.classList.contains('view-all')) {
+        // show full list, NO view-all row this time
+        renderSuggestions(clinics, false);
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.clinic-autocomplete')) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+  });
+
+document.addEventListener("DOMContentLoaded", fetchMyAppointments);
+
+function fetchMyAppointments() {
+  fetch("/api/my-appointments")
+    .then(res => res.json())
+    .then(data => renderAppointments(data))
+    .catch(err => {
+      console.error(err);
+      document.getElementById("appointments-container").innerHTML =
+        "<p>Failed to load appointments.</p>";
+    });
+}
+
+function renderAppointments(appointments) {
+  const container = document.getElementById("appointments-container");
+  container.innerHTML = "";
+
+  if (!appointments.length) {
+    container.innerHTML = "<p>No appointments found.</p>";
+    return;
+  }
+
+  appointments.forEach(appt => {
+    const div = document.createElement("div");
+    div.className = `appointment-card ${appt.status}`;
+
+    div.innerHTML = `
+      <div><strong>Pet:</strong> ${appt.pet_name}</div>
+      <div><strong>Clinic:</strong> ${appt.clinic_name}</div>
+      <div><strong>Date:</strong> ${appt.date}</div>
+      <div><strong>Time:</strong> ${appt.time}</div>
+      <div class="status ${appt.status}">
+        ${appt.status.toUpperCase()}
+      </div>
+      ${
+        appt.status === "Cancelled" || appt.status === "cancelled"
+          ? `<div class="cancel-reason">
+               <strong>Reason:</strong> ${appt.cancel_reason || "—"}
+             </div>`
+          : ""
+      }
+    `;
+card.innerHTML = `
+  <div class="appointment-row">
+    <span class="appointment-label">Pet:</span> 
+    <span>${appt.pet_name}</span>
+  </div>
+  <div class="appointment-row">
+    <span class="appointment-label">Status:</span> 
+    <span class="appointment-status status-${appt.status.toLowerCase()}">${appt.status}</span>
+  </div>
+  ...
+`;
+    container.appendChild(div);
+  });
+}
+
+  function renderAppointments(appointments) {
+  const container = document.getElementById("appointments-container");
+  container.innerHTML = "";
+
+  if (!appointments.length) {
+    container.innerHTML = "<p>No appointments found.</p>";
+    return;
+  }
+
+  appointments.forEach(appt => {
+    const card = document.createElement("div");
+    card.className = `appointment-card ${appt.status}`;
+
+    card.innerHTML = `
+      <div class="appointment-row">
+        <span class="appointment-label">Pet:</span>
+        <span>${appt.pet_name}</span>
+      </div>
+
+      <div class="appointment-row">
+        <span class="appointment-label">Clinic:</span>
+        <span>${appt.clinic_name}</span>
+      </div>
+
+      <div class="appointment-row">
+        <span class="appointment-label">Date & Time:</span>
+        <span>${appt.date} • ${appt.time}</span>
+      </div>
+
+      <div class="appointment-row">
+        <span class="appointment-label">Status:</span>
+        <span class="appointment-status status-${appt.status}">
+          ${appt.status}
+        </span>
+      </div>
+
+      ${
+        appt.status === "cancelled" && appt.cancel_reason
+          ? `<div class="cancel-reason"><strong>Reason:</strong> ${appt.cancel_reason}</div>`
+          : ""
+      }
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+
+  // --- Random Pet Doodle SVGs (Placeholder Set) ---
+  const petDoodles = [
+      // Cat Head
+      '<svg viewBox="0 0 48 48"><path d="M24 6c-8.8 0-16 7.2-16 16 0 5.3 2.6 10.3 6.9 13.4l.1.1c.3.2 1.1.7 1.5.8.5.1 1.2.2 2 .2h.5c.6 0 1.2.1 1.8.2.7.1 1.4.2 2.2.2h8.2c.8 0 1.5-.1 2.2-.2.6-.1 1.2-.2 1.8-.2h.5c.8 0 1.5-.1 2-.2.4-.1 1.2-.6 1.5-.8l.1-.1c4.3-3.1 6.9-8.1 6.9-13.4C40 13.2 32.8 6 24 6zM15 14l-4 8 8 2zM33 14l4 8-8 2z" fill="#fce4ec"/><circle cx="20" cy="24" r="1.5" fill="#231f20"/><circle cx="28" cy="24" r="1.5" fill="#231f20"/><path d="M24 30c-2 0-3.5-1.5-3.5-3.5S22 23 24 23s3.5 1.5 3.5 3.5S26 30 24 30z" fill="#ee7676"/></svg>',
+      // Dog Bone
+      '<svg viewBox="0 0 64 64"><path d="M20 28c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM44 28c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM20 32h24c2.2 0 4 1.8 4 4s-1.8 4-4 4H20c-2.2 0-4-1.8-4-4s1.8-4 4-4z" fill="#b08968"/></svg>',
+      // Fish/Scales
+      '<svg viewBox="0 0 48 48"><path d="M40 24c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16z" fill="#77f2e5"/><path d="M24 8c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16c0-1.5-.2-3-.5-4.4C37.3 22.3 35.8 24 34 24s-3.3-1.7-4-4c-1.3 2.3-3.8 4-6.8 4s-5.5-1.7-6.8-4c-1.3 2.3-3.8 4-6.8 4s-5.5-1.7-6.8-4c-1.3 2.3-3.8 4-6.8 4c-3.1 0-5.7-2.7-5.9-6z" fill="rgba(255, 255, 255, 0.4)"/></svg>',
+      // Paw Print
+      '<svg viewBox="0 0 64 64"><path d="M32 6c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16-7.2-16-16-16zM18 42c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM46 42c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM32 48c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z" fill="#bb8cf7"/></svg>',
+      // Rabbit Ears
+      '<svg viewBox="0 0 48 48"><path d="M12 24c0-6.6 5.4-12 12-12s12 5.4 12 12c0 10-6 16-12 16S12 34 12 24z" fill="#fffbe7"/><path d="M18 10c0-2 2-4 4-4s4 2 4 4V14H18V10zM30 10c0-2 2-4 4-4s4 2 4 4V14H30V10z" fill="#fffbe7"/><circle cx="20" cy="22" r="1.5" fill="#231f20"/><circle cx="28" cy="22" r="1.5" fill="#231f20"/><path d="M24 28c-1.5 0-2.5 1-2.5 2.5S22.5 33 24 33s2.5-1 2.5-2.5S25.5 28 24 28z" fill="#ff7a98"/></svg>'
+  ];
+
+  function createRandomDoodles(count = 12) {
+    const body = document.body;
+    const main = document.querySelector('main');
+    const doodleAreaHeight = main ? main.offsetHeight + main.offsetTop : document.documentElement.scrollHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // Remove existing doodles first
+    removeDoodles(); 
+
+    for (let i = 0; i < count; i++) {
+      const randomIndex = Math.floor(Math.random() * petDoodles.length);
+      const svgString = petDoodles[randomIndex];
+      const doodleWrapper = document.createElement('div');
+      doodleWrapper.innerHTML = svgString;
+      doodleWrapper.classList.add('doodle-wrapper');
+      
+      // Keep doodles slightly away from the absolute top/bottom for better visibility
+      const topOffset = 80;
+      const randomTop = Math.floor(Math.random() * (doodleAreaHeight - 2 * topOffset)) + topOffset;
+      const randomLeft = Math.floor(Math.random() * (viewportWidth - 130)) + 30;
+      const randomRotation = Math.floor(Math.random() * 25) - 12;
+      const randomSize = Math.floor(Math.random() * (120 - 60)) + 60;
+      const randomDuration = Math.floor(Math.random() * (12 - 6)) + 6;
+      const randomOpacity = Math.random() * (0.8 - 0.45) + 0.45;
+      
+      doodleWrapper.style.top = `${randomTop}px`;
+      doodleWrapper.style.left = `${randomLeft}px`;
+      doodleWrapper.style.width = `${randomSize}px`;
+      doodleWrapper.style.height = `${randomSize}px`;
+      doodleWrapper.style.transform = `rotate(${randomRotation}deg)`;
+      doodleWrapper.style.animationDuration = `${randomDuration}s`;
+      doodleWrapper.style.opacity = `${randomOpacity}`;
+      body.appendChild(doodleWrapper);
+    }
+  }
+
+  function removeDoodles() {
+    document.querySelectorAll('.doodle-wrapper').forEach(el=>el.remove());
+  }
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.querySelector("form");        // your booking form
+  const hourSel = document.getElementById("hour");
+  const minuteSel = document.getElementById("minute");
+  const timeHidden = document.getElementById("time");
+
+  // Optional: defaults
+  if (hourSel && !hourSel.value) hourSel.value = "10";
+  if (minuteSel && !minuteSel.value) minuteSel.value = "00";
+
+  form.addEventListener("submit", function (e) {
+    const h = hourSel.value;
+    const m = minuteSel.value;
+
+    if (!h || !m) {
+      // simple validation; you can show errors instead
+      alert("Please select both hour and minutes for the time.");
+      e.preventDefault();
+      return;
+    }
+
+    const hh = h.toString().padStart(2, "0");
+    const mm = m.toString().padStart(2, "0");
+
+    // This is what Flask receives as `time` ("01:30", "10:00", etc.)
+    timeHidden.value = `${hh}:${mm}`;
+  });
+});
+// Add this inside the <script> tag of book_slot.html
+document.addEventListener("DOMContentLoaded", function() {
+    const hourSel = document.getElementById("hour");
+    const minuteSel = document.getElementById("minute");
+    const meridiemSel = document.getElementById("meridiem");
+    const timeHidden = document.getElementById("time");
+
+    function updateHiddenTime() {
+        if (hourSel.value && minuteSel.value) {
+            // Formats as "10:30 PM"
+            timeHidden.value = `${hourSel.value}:${minuteSel.value} ${meridiemSel.value}`;
+        }
+    }
+
+    // Update whenever any dropdown changes
+    hourSel.addEventListener("change", updateHiddenTime);
+    minuteSel.addEventListener("change", updateHiddenTime);
+    meridiemSel.addEventListener("change", updateHiddenTime);
+
+    // Also update on form submit just to be safe
+    document.querySelector(".vet-appt-form").addEventListener("submit", updateHiddenTime);
+});
+
+/* Updated Account Roll Script */
+document.addEventListener('DOMContentLoaded', () => {
+    // Account Toggle logic
+    const accountToggle = document.getElementById('accountToggle');
+    const accountRoll = document.querySelector('.account-roll');
+
+    if (accountToggle && accountRoll) {
+        accountToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            accountRoll.classList.toggle('active');
+        });
+    }
+
+    // Close rollup when clicking anywhere else
+    document.addEventListener('click', () => {
+        if (accountRoll) accountRoll.classList.remove('active');
+    });
+
+    // Theme Toggle logic (Fixed ID name)
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark); // Uses your existing setTheme function
+        });
+    }
+});
+
+
+
+async function fetchAppointments() {
+    try {
+        const response = await fetch('/api/my-appointments');
+        const data = await response.json();
+        
+        const container = document.getElementById('appointment-list');
+        if (!data.success || data.appointments.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888;">No appointments booked yet.</p>';
+            return;
+        }
+
+        container.innerHTML = data.appointments.map(appt => `
+            <div class="appt-card animate-fade">
+                <span class="status-badge status-${appt.status || 'pending'}">
+                    ${appt.status || 'Pending'}
+                </span>
+                <div class="appt-info">
+                    <h3>${appt.pet_name}</h3>
+                    <p><i class="fa-solid fa-user-doctor"></i> ${appt.vet_name}</p>
+                    <p><i class="fa-solid fa-calendar"></i> ${appt.date}</p>
+                    <p><i class="fa-solid fa-clock"></i> ${appt.time}</p>
+                    <p style="margin-top:10px; font-size:0.7rem; color:#999;">Booked on: ${appt.created_at}</p>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error("Error fetching appointments:", error);
+    }
+}
+
+// Initial fetch and set interval for "Real-time" effect (every 10 seconds)
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAppointments();
+    setInterval(fetchAppointments, 10000); 
+});
+
+// Add or update this script in book_slot.html
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/my-appointments')
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById('appointment-list'); // Matches your container ID
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#888;">No appointments found.</p>';
+            return;
+        }
+        
+        container.innerHTML = data.map(appt => {
+            // Match colors to your existing status logic
+            const statusClass = appt.status.toLowerCase() === 'confirmed' ? 'status-confirmed' : 
+                               (appt.status.toLowerCase() === 'cancelled' ? 'status-cancelled' : 'status-pending');
+            
+            return `
+                <div class="appt-card">
+                    <span class="status-badge ${statusClass}">${appt.status}</span>
+                    <div class="appt-info">
+                        <h3>${appt.pet_name}</h3>
+                        <p><i class="fa-solid fa-hospital"></i> ${appt.clinic_name}</p>
+                        <p><i class="fa-solid fa-calendar"></i> ${appt.date || 'TBD'}</p>
+                        <p><i class="fa-solid fa-clock"></i> ${appt.time || 'TBD'}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    });
+});
+
+
+document.querySelector('input[name="email"]').addEventListener('blur', function() {
+    const email = this.value;
+    if(email) {
+        refreshDashboard(email);
+    }
+});
+
+function refreshDashboard(email) {
+    fetch(`/api/my-appointments/${email}`)
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById('appointment-list');
+        if (data.length === 0) {
+            container.innerHTML = '<p>No bookings found for this email.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(appt => `
+            <div class="appt-card">
+                <span class="status-badge status-${appt.status.toLowerCase()}">${appt.status}</span>
+                <div class="appt-info">
+                    <h3>${appt.pet_name}</h3>
+                    <p><b>Clinic:</b> ${appt.clinic_name}</p>
+                    <p><b>Time:</b> ${appt.date} at ${appt.time}</p>
+                    ${appt.status === 'cancelled' ? 
+                        `<p style="color:red; margin-top:10px;"><b>Reason:</b> ${appt.cancel_reason || 'Denied by Admin'}</p>` 
+                        : ''}
+                </div>
+            </div>
+        `).join('');
+    });
+}
+
+function rejectAppt(id) {
+    const reason = prompt("Enter reason for cancellation:");
+    if (reason === null) return; // Cancelled prompt
+
+    fetch(`/admin/appointments/reject/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            alert("Appointment Cancelled and user notified.");
+            location.reload();
+        }
+    });
+}
+
+// Add this line at the top of your script to get the email from the session
+const userEmail = "{{ session['user']['email'] if session.get('user') else '' }}";
+
+function fetchMyAppointments() {
+  if (!userEmail) return; // Don't fetch if user isn't logged in
+
+  // Update the URL to include the email
+  fetch(`/api/my-appointments/${userEmail}`) 
+    .then(res => res.json())
+    .then(data => renderAppointments(data))
+    .catch(err => {
+      console.error(err);
+      document.getElementById("appointments-container").innerHTML = "<p>Failed to load appointments.</p>";
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+ // ---- DARK MODE LOGIC WITH ANIMATION ---- //
+  const themeAnimOverlay = document.getElementById('theme-animation-overlay');
+  const lightIcon = document.getElementById('theme-light-icon');
+  const darkIcon = document.getElementById('theme-dark-icon');
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const body = document.body;
+
+  // --- 1. THEME UTILITIES (Supports the Animation Overlay) ---
+function updateIconVisibility(isDark) {
+    const lightIcon = document.getElementById('theme-light-icon');
+    const darkIcon = document.getElementById('theme-dark-icon');
+    if (lightIcon) lightIcon.style.display = isDark ? 'none' : 'inline';
+    if (darkIcon) darkIcon.style.display = isDark ? 'inline' : 'none';
+}
+
+function setTheme(dark) {
+    const body = document.body;
+    const themeAnimOverlay = document.getElementById('theme-animation-overlay');
+    const themeToggleBtn = document.getElementById('themeToggle');
+
+    const isCurrentlyDark = body.classList.contains('night-mode');
+    if (dark === isCurrentlyDark) return;
+
+    // Trigger Animation Overlay
+    if (themeAnimOverlay) {
+        themeAnimOverlay.classList.remove('animate-light', 'animate-dark');
+        themeAnimOverlay.classList.add(dark ? 'animate-dark' : 'animate-light');
+        themeAnimOverlay.style.opacity = '1';
+    }
+
+    if (themeToggleBtn) themeToggleBtn.disabled = true;
+
+    setTimeout(() => {
+        body.classList.toggle('night-mode', dark);
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+        updateIconVisibility(dark);
+        
+        if (typeof removeDoodles === 'function') removeDoodles();
+        if (typeof createRandomDoodles === 'function') createRandomDoodles(12);
+
+        if (themeAnimOverlay) themeAnimOverlay.style.opacity = '0';
+    }, 50);
+
+    setTimeout(() => {
+        if (themeAnimOverlay) themeAnimOverlay.classList.remove('animate-dark', 'animate-light');
+        if (themeToggleBtn) themeToggleBtn.disabled = false;
+    }, 450);
+}
+
+// --- 2. EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', () => {
+    // A. Theme Toggle
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark);
+        });
+    }
+
+    // B. Account / Logout Rollup
+    const accountToggle = document.getElementById('accountToggle');
+    const accountRoll = document.querySelector('.account-roll');
+
+    if (accountToggle && accountRoll) {
+        accountToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            accountRoll.classList.toggle('active');
+        });
+    }
+
+    // Close rollup on outside click
+    document.addEventListener('click', () => {
+        if (accountRoll) accountRoll.classList.remove('active');
+    });
+
+    // C. Initial Theme Load
+    const savedTheme = localStorage.getItem('theme') === 'dark';
+    document.body.classList.toggle('night-mode', savedTheme);
+    updateIconVisibility(savedTheme);
+});
+  </script>
+
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const accountBtn = document.querySelector('.zentail-account-theme a');
+    const popup = document.getElementById('account-popup');
+    if(!accountBtn || !popup) return;  // stop if missing
+
+    const closeBtn = document.getElementById('close-account-popup');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    accountBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        popup.style.display = 'flex';
+    });
+
+    closeBtn?.addEventListener('click', () => popup.style.display = 'none');
+
+    logoutBtn?.addEventListener('click', () => {
+        window.location.href = "/logout";
+    });
+
+    popup.addEventListener('click', (e) => {
+        if(e.target === popup) popup.style.display = 'none';
+    });
+});
+fetch("/api/session-user")
+    .then(res => res.json())
+    .then(user => {
+        if (!user.error) {
+            document.getElementById("account-popup-content").innerHTML = `
+                <p>${user.name}</p>
+                <p>${user.email}</p>
+                <p>${user.role}</p>
+            `;
+        } else {
+            document.getElementById("account-popup-content").innerHTML = "You are not logged in";
+        }
+    });
+/* Updated Account Roll Script */
+document.addEventListener('DOMContentLoaded', () => {
+    // Account Toggle logic
+    const accountToggle = document.getElementById('accountToggle');
+    const accountRoll = document.querySelector('.account-roll');
+
+    if (accountToggle && accountRoll) {
+        accountToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            accountRoll.classList.toggle('active');
+        });
+    }
+
+    // Close rollup when clicking anywhere else
+    document.addEventListener('click', () => {
+        if (accountRoll) accountRoll.classList.remove('active');
+    });
+
+    // Theme Toggle logic (Fixed ID name)
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark); // Uses your existing setTheme function
+        });
+    }
+});
+
+
+
+if (form) {
+    form.addEventListener('submit', async (e) => {
+        // Only prevent default if you want to handle the response via AJAX 
+        // without refreshing the whole page.
+        e.preventDefault(); 
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                // Show your custom notification popup
+                popup.style.display = 'flex';
+                form.reset();
+            } else {
+                alert("Something went wrong with the booking. Please try again.");
+            }
+        } catch (error) {
+            console.error("Booking error:", error);
+        }
+    });
+}
+</script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+</body>
+</html>

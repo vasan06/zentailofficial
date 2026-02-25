@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZenTail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="./static/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Nunito:wght@500;700&family=Micro+5&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+  <div id="theme-animation-overlay"></div>
+
+  <div id="zentail-loader" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#fff;z-index:9998;display:flex;align-items:center;justify-content:center;transition:opacity 0.5s;">
+    <div class="loader-inner">
+      <span class="loader-paw">
+        <i class="fa-solid fa-paw" style="font-size:2.3em;color:#bb6a7f;"></i>
+      </span>
+      <span class="loader-text" style="font-size:1.12em; color: #444; margin-left: 10px;">Loading ZenTail...</span>
+    </div>
+  </div>
+
+  <header class="zentail-header">
+    <div class="zentail-header-top">
+        <div class="header-section section-left">
+            <span class="zentail-title">ZENTAIL</span>
+        </div>
+
+        <div class="header-section section-center">
+            <div class="zentail-logo">
+                <img src="../static/images/combain.png" alt="ZenTail Logo" onerror="this.onerror=null;this.src='https://placehold.co/120x120/f9f9f9/bb6a7f?text=PET'">
+            </div>
+        </div>
+        
+        <div class="header-section section-right">
+            <div class="zentail-account-theme">
+                
+
+                <div class="roll-btn account-roll">
+                    <a href="{{ url_for('logout') }}" class="slide-btn logout-btn" id="logoutBtn">
+                        <span>Logout</span>
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                    
+                    <button class="icon-btn account-btn" id="accountToggle">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+                </div>
+                <button class="icon-btn theme-btn" id="themeToggle">
+                    <i class="fa-solid fa-sun" id="theme-light-icon"></i>
+                    <i class="fa-solid fa-moon" id="theme-dark-icon" style="display:none;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('home') }}" >HOME</a></li>
+            <li><a href="{{ url_for('products') }}" class="active">PRODUCTS</a></li>
+            <li><a href="{{ url_for('breeds') }}">BREEDS</a></li>
+            <li><a href="{{ url_for('vet_locator') }}">VET LOCATOR</a></li>
+            <li><a href="{{ url_for('book_slot') }}">BOOK SLOT</a></li>
+            <li><a href="{{ url_for('about') }}">ABOUT US</a></li>
+        </ul>
+    </nav>
+</header>
+
+
+<main> 
+    <section class="products-hero">
+      <h1 class="products-title">Products for Every Kind of Pet</h1>
+      <p class="products-subtitle">
+        Browse curated food, lotions, medicines, accessories, and toys chosen to keep
+        tails wagging, whiskers twitching, and feathers bright.
+      </p>
+    </section>
+
+    <section class="product-filters-container">
+        <div class="filter-group">
+          <br>
+            <label for="animal-category">Filter by Animal:</label>
+            <select id="animal-category" onchange="renderProducts()">
+                <option value="">All Animals</option>
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+                <option value="Bird">Bird</option>
+                <option value="Fish">Fish</option>
+                <option value="Small Animal">Small Animal</option>
+            </select>
+        </div>
+        <div class="filter-group">
+          <br>
+            <label for="product-type">Filter by Type:</label>
+            <select id="product-type" onchange="renderProducts()">
+                <option value="">All Types</option>
+                <option value="Food">Food</option>
+                <option value="Lotion">Lotion</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Medicine">Medicine</option>
+                <option value="Toy">Toy</option>
+                <option value="Accessory">Accessory</option>
+            </select>
+        </div>
+    </section>
+
+    <div id="dynamic-product-sections">
+      
+        </div>
+
+
+</main> 
+  
+  <footer>
+    <div class="footer-content">
+      <div class="footer-left">
+        <div class="footer-logo">ZENTAIL</div>
+        <div class="quick-links">
+            <span class="quick-links-title">Quick Links</span>
+            <div class="quick-links-columns">
+                <div>
+                    <a href="{{ url_for('products') }}">Products</a>
+                    <a href="{{ url_for('vet_locator') }}">Vet Locator</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('breeds') }}">Breeds</a>
+                    <a href="{{ url_for('about') }}">About Us</a>
+                </div>
+                <div>
+                    <a href="{{ url_for('book_slot') }}">Book Slots</a>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="footer-right">
+        <span class="contact-title">Contact us</span>
+        <p>Email: zentailofficials@gmail.com<br>
+           Phone: +91 830 00 22 991
+        </p><br>
+        <div class="touch-in">
+          <span class="contact-title">Touch in</span><br>
+          <div class="social-icons">
+            <a href="#"><img height="35px" width="35px" src="../static/images/instagram.svg" alt="Instagram" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=IG'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/facebook.svg" alt="Facebook" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=FB'"></a>
+            <a href="#"><img height="35px" width="35px" src="../static/images/whatsapp.svg" alt="WhatsApp" onerror="this.onerror=null;this.src='https://placehold.co/35x35/000000/ffffff?text=WA'"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom" >
+      <span>Copyrights 2025. All Rights reserved <br><br><a href="{{ url_for('privacy') }}">Privacy</a> | <a href="{{ url_for('privacy') }}">Terms</a></span>
+    </div>
+  </footer>
+
+  <!-- Chatbot Button -->
+<button class="confetti-btn" title="Celebrate!" style="position:fixed;bottom:16px;right:16px;z-index:13;background:var(--baddie-accent);color:#fff;border:none;border-radius:50%;width:58px;height:58px;box-shadow:0 2px 14px #d3b9f7cc;font-size:1.35em;cursor:pointer;outline:none;display:flex;align-items:center;justify-content:center;">
+  <i class="fa-solid fa-paw"></i>
+</button>
+
+<!-- AI Chatbot Modal -->
+<div id="chatbot-popup" style="display:none;position:fixed;bottom:80px;right:20px;width:320px;height:400px;background:#fff;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.2);z-index:3000;overflow:hidden;flex-direction:column;">
+  <div style="background:#bb6a7f;color:#fff;padding:10px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">
+    ZenTail AI Assistant
+    <span id="chatbot-close" style="cursor:pointer;">&times;</span>
+  </div>
+  <div id="chatbot-messages" style="flex:1;padding:10px;overflow-y:auto;background:#f9f9f9;"></div>
+  <div style="display:flex;border-top:1px solid #ddd;">
+    <input id="chatbot-input" type="text" placeholder="Ask me anything..." style="flex:1;padding:10px;border:none;outline:none;">
+    <button id="chatbot-send" style="background:#bb6a7f;color:#fff;border:none;padding:10px;cursor:pointer;">Send</button>
+  </div>
+</div>
+
+  <script>
+  
+  // --- NEW: Product Rendering Logic (MUST BE AT THE TOP OF THE SCRIPT) ---
+
+  /**
+   * Generates the HTML for a single product card.
+   * Uses the properties returned from MongoDB.
+   */
+  function createProductCardHTML(product) {
+      // Determine the weight/volume display
+      const quantityText = product.quantity && product.unit 
+          ? `Weight/Volume: ${product.quantity} ${product.unit}` 
+          : '';
+          
+      // Placeholder link: In a real scenario, this would be product.external_url 
+      const productLink = '#'; 
+
+      return `
+        <article class="product-card">
+          <div class="product-image">
+            <img src="${product.image}" alt="${product.name}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300x300?text=No+Image'" >
+          </div>
+          <div class="product-body">
+            <h3 class="product-name">${product.name}</h3>
+            <p class="product-meta">${quantityText}</p>
+            <p class="product-meta product-brand">Brand: ${product.brand}</p>
+            <p class="product-price">₹ ${product.price.toFixed(2)}</p>
+            <p class="product-desc"></p>
+            
+            <a href="${productLink}" class="product-view-btn" target="_blank">
+                View Product
+            </a>
+          </div>
+        </article>
+      `;
+  }
+
+  /**
+   * Fetches products from the Flask API, filters, groups by Type, and renders the sections.
+   */
+  async function renderProducts() {
+      const container = document.getElementById('dynamic-product-sections');
+      const selectedAnimalCategory = document.getElementById('animal-category').value;
+      const selectedProductType = document.getElementById('product-type').value;
+
+      container.innerHTML = '<h2>Loading products...</h2>'; // Show loading state
+
+      try {
+          // 1. Fetch data from the Flask API endpoint
+          const response = await fetch('/api/products');
+          
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          let products = await response.json();
+
+          if (products.length === 0) {
+               container.innerHTML = '<p class="empty-state">No products found. Please add some from the Admin page!</p>';
+               return;
+          }
+
+          // 2. Client-Side Filtering based on dropdowns (using the new fields)
+          products = products.filter(product => {
+              const matchesAnimal = !selectedAnimalCategory || product.category === selectedAnimalCategory;
+              const matchesType = !selectedProductType || product.type === selectedProductType;
+              return matchesAnimal && matchesType;
+          });
+
+          if (products.length === 0) {
+               container.innerHTML = '<p class="empty-state">No products match the selected filters.</p>';
+               return;
+          }
+
+          // 3. Group products by 'type' (Food, Lotion, etc.)
+          const groupedProducts = products.reduce((acc, product) => {
+              // Fallback to 'Uncategorized' if the field is missing
+              const type = product.type || 'Uncategorized'; 
+              if (!acc[type]) {
+                  acc[type] = [];
+              }
+              acc[type].push(product);
+              return acc;
+          }, {});
+
+          // 4. Generate HTML sections for each product type
+          let allSectionsHTML = '';
+          const sortedTypes = Object.keys(groupedProducts).sort(); // Sort types alphabetically
+
+          sortedTypes.forEach(type => {
+              const productsInType = groupedProducts[type];
+              
+              let productsRowHTML = '';
+              productsInType.forEach(product => {
+                  productsRowHTML += createProductCardHTML(product);
+              });
+
+              allSectionsHTML += `
+                <section class="products-section">
+                  <div class="products-section-header">
+                    <h2 class="products-section-title">${type}</h2>
+                  </div>
+                  <div class="products-row">
+                    ${productsRowHTML}
+                  </div>
+                </section>
+              `;
+          });
+
+          // 5. Inject all generated HTML
+          container.innerHTML = allSectionsHTML;
+
+      } catch (error) {
+          console.error('Error fetching products from MongoDB API:', error);
+          container.innerHTML = '<p class="error-state">Error loading products. Check your Flask server and MongoDB connection.</p>';
+      }
+  }
+
+  // Call the function to render the products when the page loads
+  window.addEventListener('load', renderProducts);
+
+  // --- Start of existing script logic ---
+  
+  // --- Random Pet Doodle SVGs (Placeholder Set) ---
+  const petDoodles = [
+      // Cat Head
+      '<svg viewBox="0 0 48 48"><path d="M24 6c-8.8 0-16 7.2-16 16 0 5.3 2.6 10.3 6.9 13.4l.1.1c.3.2 1.1.7 1.5.8.5.1 1.2.2 2 .2h.5c.6 0 1.2.1 1.8.2.7.1 1.4.2 2.2.2h8.2c.8 0 1.5-.1 2.2-.2.6-.1 1.2-.2 1.8-.2h.5c.8 0 1.5-.1 2-.2.4-.1 1.2-.6 1.5-.8l.1-.1c4.3-3.1 6.9-8.1 6.9-13.4C40 13.2 32.8 6 24 6zM15 14l-4 8 8 2zM33 14l4 8-8 2z" fill="#fce4ec"/><circle cx="20" cy="24" r="1.5" fill="#231f20"/><circle cx="28" cy="24" r="1.5" fill="#231f20"/><path d="M24 30c-2 0-3.5-1.5-3.5-3.5S22 23 24 23s3.5 1.5 3.5 3.5S26 30 24 30z" fill="#ee7676"/></svg>',
+      // Dog Bone
+      '<svg viewBox="0 0 64 64"><path d="M20 28c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM44 28c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM20 32h24c2.2 0 4 1.8 4 4s-1.8 4-4 4H20c-2.2 0-4-1.8-4-4s1.8-4 4-4z" fill="#b08968"/></svg>',
+      // Fish/Scales
+      '<svg viewBox="0 0 48 48"><path d="M40 24c0 8.8-7.2 16-16 16s-16-7.2-16-16 7.2-16 16-16 16 7.2 16 16z" fill="#77f2e5"/><path d="M24 8c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16c0-1.5-.2-3-.5-4.4C37.3 22.3 35.8 24 34 24s-3.3-1.7-4-4c-1.3 2.3-3.8 4-6.8 4s-5.5-1.7-6.8-4c-1.3 2.3-3.8 4-6.8 4s-5.5-1.7-6.8-4c-1.3 2.3-3.8 4-6.8 4c-3.1 0-5.7-2.7-5.9-6z" fill="rgba(255, 255, 255, 0.4)"/></svg>',
+      // Paw Print
+      '<svg viewBox="0 0 64 64"><path d="M32 6c-8.8 0-16 7.2-16 16s7.2 16 16 16 16-7.2 16-16-7.2-16-16-16zM18 42c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM46 42c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zM32 48c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z" fill="#bb8cf7"/></svg>',
+      // Rabbit Ears
+      '<svg viewBox="0 0 48 48"><path d="M12 24c0-6.6 5.4-12 12-12s12 5.4 12 12c0 10-6 16-12 16S12 34 12 24z" fill="#fffbe7"/><path d="M18 10c0-2 2-4 4-4s4 2 4 4V14H18V10zM30 10c0-2 2-4 4-4s4 2 4 4V14H30V10z" fill="#fffbe7"/><circle cx="20" cy="22" r="1.5" fill="#231f20"/><circle cx="28" cy="22" r="1.5" fill="#231f20"/><path d="M24 28c-1.5 0-2.5 1-2.5 2.5S22.5 33 24 33s2.5-1 2.5-2.5S25.5 28 24 28z" fill="#ff7a98"/></svg>'
+  ];
+
+  function createRandomDoodles(count = 12) {
+    const body = document.body;
+    const main = document.querySelector('main');
+    const doodleAreaHeight = main ? main.offsetHeight + main.offsetTop : document.documentElement.scrollHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // Remove existing doodles first
+    removeDoodles(); 
+
+    for (let i = 0; i < count; i++) {
+      const randomIndex = Math.floor(Math.random() * petDoodles.length);
+      const svgString = petDoodles[randomIndex];
+      const doodleWrapper = document.createElement('div');
+      doodleWrapper.innerHTML = svgString;
+      doodleWrapper.classList.add('doodle-wrapper');
+      
+      // Keep doodles slightly away from the absolute top/bottom for better visibility
+      const topOffset = 80;
+      const randomTop = Math.floor(Math.random() * (doodleAreaHeight - 2 * topOffset)) + topOffset;
+      const randomLeft = Math.floor(Math.random() * (viewportWidth - 130)) + 30;
+      const randomRotation = Math.floor(Math.random() * 25) - 12;
+      const randomSize = Math.floor(Math.random() * (120 - 60)) + 60;
+      const randomDuration = Math.floor(Math.random() * (12 - 6)) + 6;
+      const randomOpacity = Math.random() * (0.8 - 0.45) + 0.45;
+      
+      doodleWrapper.style.top = `${randomTop}px`;
+      doodleWrapper.style.left = `${randomLeft}px`;
+      doodleWrapper.style.width = `${randomSize}px`;
+      doodleWrapper.style.height = `${randomSize}px`;
+      doodleWrapper.style.transform = `rotate(${randomRotation}deg)`;
+      doodleWrapper.style.animationDuration = `${randomDuration}s`;
+      doodleWrapper.style.opacity = `${randomOpacity}`;
+      body.appendChild(doodleWrapper);
+    }
+  }
+
+  function removeDoodles() {
+    document.querySelectorAll('.doodle-wrapper').forEach(el=>el.remove());
+  }
+
+  // ---- DARK MODE LOGIC WITH ANIMATION ---- //
+  const themeAnimOverlay = document.getElementById('theme-animation-overlay');
+  const lightIcon = document.getElementById('theme-light-icon');
+  const darkIcon = document.getElementById('theme-dark-icon');
+  const themeToggleBtn = document.getElementById('theme-toggle-btn');
+  const body = document.body;
+
+  function updateIconVisibility(isDark) {
+      if (lightIcon) lightIcon.style.display = isDark ? 'none' : 'inline';
+      if (darkIcon) darkIcon.style.display = isDark ? 'inline' : 'none';
+  }
+
+  function setTheme(dark) {
+      // 1. Determine if the theme is actually changing
+      const isCurrentlyDark = body.classList.contains('night-mode');
+      if (dark === isCurrentlyDark) return;
+
+      // 2. Start the full-screen animation
+      if (dark) {
+          // Transitioning to Dark Mode
+          themeAnimOverlay.classList.remove('animate-light');
+          themeAnimOverlay.classList.add('animate-dark');
+      } else {
+          // Transitioning to Light Mode
+          themeAnimOverlay.classList.remove('animate-dark');
+          themeAnimOverlay.classList.add('animate-light');
+      }
+      
+      // Disable clicks during animation
+      if (themeToggleBtn) themeToggleBtn.disabled = true;
+
+      // The animation effect: Instant color change + smooth fade-out
+      setTimeout(() => {
+          // 3. Apply the new theme class
+          body.classList.toggle('night-mode', dark);
+          localStorage.setItem('theme', dark ? 'dark' : 'light');
+          
+          // 4. Update the icons and doodles
+          updateIconVisibility(dark);
+          removeDoodles();
+          createRandomDoodles(12);
+
+          // 5. Fade out the overlay
+          themeAnimOverlay.style.opacity = '0';
+      }, 50); // Small delay to ensure the browser registers the class addition before opacity change
+
+      setTimeout(() => {
+          // 6. Reset overlay for the next transition
+          themeAnimOverlay.classList.remove('animate-dark', 'animate-light');
+          themeAnimOverlay.style.opacity = '1'; // Reset opacity for the next instant change
+          
+          // Re-enable the button
+          if (themeToggleBtn) themeToggleBtn.disabled = false;
+      }, 450); // Match this to the animation length (400ms fade-out + buffer)
+  }
+
+  // Loader and interactive fade
+  window.onload = function() {
+    // Check initial theme state
+    const initialIsDark = localStorage.getItem('theme') === 'dark';
+    body.classList.toggle('night-mode', initialIsDark);
+    updateIconVisibility(initialIsDark);
+    themeAnimOverlay.style.opacity = '0'; // Ensure overlay is hidden initially
+
+    // Fade out loader
+    setTimeout(() => {
+      const loader = document.getElementById('zentail-loader');
+      if (loader) loader.style.opacity = '0';
+    }, 700);
+    setTimeout(() => {
+      const loader = document.getElementById('zentail-loader');
+      if (loader) loader.style.display = 'none';
+    }, 1200);
+
+    // Fade in sections
+    document.querySelectorAll('.animate-fade').forEach((block, idx) => {
+      setTimeout(()=>block.classList.add('visible'),700+idx*320);
+    });
+    
+    // Initial doodle creation
+    createRandomDoodles(12);
+  };
+  
+  // Theme button listener
+  document.addEventListener('DOMContentLoaded', () => {
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+        themeToggleBtn.onclick = function() {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark);
+        };
+    }
+    
+
+  });
+
+/* Updated Account Roll Script */
+document.addEventListener('DOMContentLoaded', () => {
+    // Account Toggle logic
+    const accountToggle = document.getElementById('accountToggle');
+    const accountRoll = document.querySelector('.account-roll');
+
+    if (accountToggle && accountRoll) {
+        accountToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            accountRoll.classList.toggle('active');
+        });
+    }
+
+    // Close rollup when clicking anywhere else
+    document.addEventListener('click', () => {
+        if (accountRoll) accountRoll.classList.remove('active');
+    });
+
+    // Theme Toggle logic (Fixed ID name)
+    const themeBtn = document.getElementById('themeToggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const isDark = !document.body.classList.contains('night-mode');
+            setTheme(isDark); // Uses your existing setTheme function
+        });
+    }
+});
+  </script>
+  <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+</body>
+</html>
